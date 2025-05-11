@@ -46,16 +46,185 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Circle.cs" />
+    <Compile Include="Decagono.cs" />
+    <Compile Include="Deltoid.cs" />
+    <Compile Include="Ellipse.cs" />
+    <Compile Include="Eneagono.cs" />
+    <Compile Include="FrmCirculo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmCirculo.Designer.cs">
+      <DependentUpon>FrmCirculo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmCuadrado.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmCuadrado.Designer.cs">
+      <DependentUpon>FrmCuadrado.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmDecagono.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmDecagono.Designer.cs">
+      <DependentUpon>FrmDecagono.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmDeltoide.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmDeltoide.Designer.cs">
+      <DependentUpon>FrmDeltoide.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmElipse.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmElipse.Designer.cs">
+      <DependentUpon>FrmElipse.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmEneagono.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmEneagono.Designer.cs">
+      <DependentUpon>FrmEneagono.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrmFigures.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FrmFigures.Designer.cs">
       <DependentUpon>FrmFigures.cs</DependentUpon>
     </Compile>
+    <Compile Include="FrmHeptagono.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmHeptagono.Designer.cs">
+      <DependentUpon>FrmHeptagono.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmHexagono.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmHexagono.Designer.cs">
+      <DependentUpon>FrmHexagono.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmOctagono.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmOctagono.Designer.cs">
+      <DependentUpon>FrmOctagono.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmOvalo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmOvalo.Designer.cs">
+      <DependentUpon>FrmOvalo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmPentagono.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmPentagono.Designer.cs">
+      <DependentUpon>FrmPentagono.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmRectangulo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmRectangulo.Designer.cs">
+      <DependentUpon>FrmRectangulo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmRombo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmRombo.Designer.cs">
+      <DependentUpon>FrmRombo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmRomboide.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmRomboide.Designer.cs">
+      <DependentUpon>FrmRomboide.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmTrapezoide.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmTrapezoide.Designer.cs">
+      <DependentUpon>FrmTrapezoide.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmTriangulo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmTriangulo.Designer.cs">
+      <DependentUpon>FrmTriangulo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Heptagon.cs" />
+    <Compile Include="Hexagon.cs" />
+    <Compile Include="Octagon.cs" />
+    <Compile Include="Oval.cs" />
+    <Compile Include="Pentagon.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rectangle.cs" />
+    <Compile Include="RegularPoligon.cs" />
+    <Compile Include="Rhomboid.cs" />
+    <Compile Include="Rhombus.cs" />
+    <Compile Include="FrmTrapecio.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmTrapecio.Designer.cs">
+      <DependentUpon>FrmTrapecio.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Square.cs" />
+    <Compile Include="Trapeze.cs" />
+    <Compile Include="Trapezoid.cs" />
+    <Compile Include="Triangle.cs" />
+    <Compile Include="Validation.cs" />
+    <EmbeddedResource Include="FrmCirculo.resx">
+      <DependentUpon>FrmCirculo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmCuadrado.resx">
+      <DependentUpon>FrmCuadrado.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmDecagono.resx">
+      <DependentUpon>FrmDecagono.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmDeltoide.resx">
+      <DependentUpon>FrmDeltoide.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmElipse.resx">
+      <DependentUpon>FrmElipse.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmEneagono.resx">
+      <DependentUpon>FrmEneagono.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FrmFigures.resx">
       <DependentUpon>FrmFigures.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmHeptagono.resx">
+      <DependentUpon>FrmHeptagono.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmHexagono.resx">
+      <DependentUpon>FrmHexagono.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmOctagono.resx">
+      <DependentUpon>FrmOctagono.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmOvalo.resx">
+      <DependentUpon>FrmOvalo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmPentagono.resx">
+      <DependentUpon>FrmPentagono.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmRectangulo.resx">
+      <DependentUpon>FrmRectangulo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmRombo.resx">
+      <DependentUpon>FrmRombo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmRomboide.resx">
+      <DependentUpon>FrmRomboide.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmTrapezoide.resx">
+      <DependentUpon>FrmTrapezoide.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmTriangulo.resx">
+      <DependentUpon>FrmTriangulo.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -66,6 +235,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="FrmTrapecio.resx">
+      <DependentUpon>FrmTrapecio.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
