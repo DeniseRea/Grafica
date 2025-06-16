@@ -25,5 +25,24 @@ namespace Padre_Hijo
             cuadrado.MdiParent = this; 
             cuadrado.Show();
         }
+
+        private void toolStrip_Lineas_Click(object sender, EventArgs e)
+        {
+            FrmHilogram hilogram = new FrmHilogram();
+            hilogram.MdiParent = this;
+            hilogram.Show();
+
+        }
+
+        private void ToolStrip_Cuadrangulos_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void florMargaritaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FrmFlower frm= new FrmFlower();
+            frm.Show();
+        }
     }
 }

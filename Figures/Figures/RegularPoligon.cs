@@ -56,7 +56,7 @@ namespace Figures
             this.NumberOfSides = numberOfSides;
             this.Base = base_;
             this.Radius = radious;
-            //this.height = radious* (Math.PI / 180) * (180.0 / numberOfSides);
+            
         }
 
         public RegularPolygon()

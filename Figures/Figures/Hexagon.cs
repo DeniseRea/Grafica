@@ -16,13 +16,7 @@ namespace Figures
         {
         }
 
-        public override void CalculateArea()
-        {
-            // Fórmula del área de un hexágono regular
-            CalculatePerimeter();
-            calculateApothema();
-            double p = getPerimeter();
-            setArea((p * height) / 2);
+   setArea((p * height) / 2);
         }
 
         public override void calculateApothema()
