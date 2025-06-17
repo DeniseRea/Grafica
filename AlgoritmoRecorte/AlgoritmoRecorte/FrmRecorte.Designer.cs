@@ -56,6 +56,7 @@
             // graphic
             // 
             this.graphic.Controls.Add(this.PicCanvas);
+            this.graphic.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.graphic.Location = new System.Drawing.Point(36, 31);
             this.graphic.Name = "graphic";
             this.graphic.Size = new System.Drawing.Size(634, 538);
@@ -89,6 +90,7 @@
             // 
             this.groupBox2.Controls.Add(this.BtnReset);
             this.groupBox2.Controls.Add(this.BtnCut);
+            this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox2.Location = new System.Drawing.Point(698, 42);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(371, 122);

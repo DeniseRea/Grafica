@@ -119,11 +119,10 @@ namespace AlgoritmoRecorte
         private void SetupDataGridView()
         {
             dgwPixels.Columns.Clear();
-            dgwPixels.Columns.Add("StartPoint", "Punto Inicial");
-            dgwPixels.Columns.Add("EndPoint", "Punto Final");
+            dgwPixels.Columns.Add("StartPoint", "Inicial");
+            dgwPixels.Columns.Add("EndPoint", " Final");
             dgwPixels.Columns.Add("BinaryValue", "Valor Binario");
             dgwPixels.Columns.Add("OctantCode", "Código Octante");
-            dgwPixels.Columns.Add("RegionCode", "Código de Región");
             dgwPixels.AllowUserToAddRows = false;
         }
 
@@ -142,17 +141,12 @@ namespace AlgoritmoRecorte
 
                     // Calcular código de octante
                     int octantCode = CalculateOctantCode(line.start, line.end);
-                    string octantBinary = Convert.ToString(octantCode, 2).PadLeft(3, '0');
-
-                    // Obtener códigos de región (para el algoritmo de Cohen-Sutherland)
-                    string regionCodes = GetRegionCodes(line.start, line.end, cohen.GetClipRegion());
 
                     dgwPixels.Rows.Add(
                         $"({line.start.X}, {line.start.Y})",
                         $"({line.end.X}, {line.end.Y})",
                         $"Inicio: {startBinary}, Fin: {endBinary}",
-                        $"Octante: {octantCode} ({octantBinary})",
-                        regionCodes
+                        $"Octante: {octantCode}"
                     );
                 }
             }
@@ -186,36 +180,6 @@ namespace AlgoritmoRecorte
                 if (dx < -dy) return 6;
                 else return 7;
             }
-        }
-
-        // Método para obtener códigos de región para el algoritmo Cohen-Sutherland
-        private string GetRegionCodes(Point start, Point end, Rectangle clipRect)
-        {
-            int startCode = ComputeOutCode(start, clipRect);
-            int endCode = ComputeOutCode(end, clipRect);
-
-            string startCodeBinary = Convert.ToString(startCode, 2).PadLeft(4, '0');
-            string endCodeBinary = Convert.ToString(endCode, 2).PadLeft(4, '0');
-
-            return $"Inicio: {startCodeBinary}, Fin: {endCodeBinary}";
-        }
-
-        // Método para calcular el código de región según Cohen-Sutherland
-        private int ComputeOutCode(Point p, Rectangle clipRect)
-        {
-            int code = 0;
-
-            if (p.X < clipRect.Left)           // a la izquierda
-                code |= 1;
-            else if (p.X > clipRect.Right)     // a la derecha
-                code |= 2;
-
-            if (p.Y < clipRect.Top)            // arriba
-                code |= 4;
-            else if (p.Y > clipRect.Bottom)    // abajo
-                code |= 8;
-
-            return code;
         }
     }
 }

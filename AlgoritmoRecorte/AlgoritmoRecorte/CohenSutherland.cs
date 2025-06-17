@@ -5,17 +5,20 @@ using System.Linq;
 
 namespace AlgoritmoRecorte
 {
-    internal class CohenSutherland
+    public class CohenSutherland
     {
         private List<(Point start, Point end, bool isInside)> lineSegments;
         private Rectangle clipRegion;
         private Size canvas;
         private Cortar clipper;
 
+        
         public CohenSutherland(Size canvasSize)
         {
             canvas = canvasSize;
             lineSegments = new List<(Point start, Point end, bool isInside)>();
+
+            // Definir la región de recorte como un tercio central del lienzo
             clipRegion = new Rectangle(
                 canvas.Width / 3,
                 canvas.Height / 3,
@@ -25,6 +28,9 @@ namespace AlgoritmoRecorte
             clipper = new Cortar(clipRegion);
         }
 
+        /// <summary>
+        /// Elimina segmentos externos que están cerca del punto especificado
+        /// </summary>
         public bool RemoveExternalSegmentsAtPoint(Point clickPoint, int tolerance = 5)
         {
             bool removedAny = false;
@@ -66,11 +72,17 @@ namespace AlgoritmoRecorte
                    point.Y >= minY && point.Y <= maxY;
         }
 
+        /// <summary>
+        /// Añade una nueva línea al conjunto de líneas para recortar
+        /// </summary>
         public void AddLine(Point start, Point end)
         {
             lineSegments.Add((start, end, true));
         }
 
+
+        /// El algoritmo procesa cada línea según estos casos:
+        
         public void ClipLines()
         {
             lineSegments = clipper.ClipLines(lineSegments);
@@ -81,20 +93,30 @@ namespace AlgoritmoRecorte
             return Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
         }
 
+        
+        /// Obtiene la lista de segmentos de línea después del recorte
+        
         public List<(Point start, Point end)> GetClippedLineSegments()
         {
             return lineSegments.Select(l => (l.start, l.end)).ToList();
         }
 
+        
+        /// Obtiene la región de recorte
+        
         public Rectangle GetClipRegion()
         {
             return clipRegion;
         }
 
+        /// Dibuja todas las líneas en el gráfico proporcionado
+        /// Las líneas dentro del área de recorte se dibujan en negro.
+        /// Las líneas fuera del área de recorte se dibujan en azulito.
+
         public void Draw(Graphics g)
         {
             using (Pen insidePen = new Pen(Color.Black, 2))
-            using (Pen outsidePen = new Pen(Color.Pink, 2))
+            using (Pen outsidePen = new Pen(Color.SkyBlue, 2))
             {
                 foreach (var line in lineSegments)
                 {
@@ -107,6 +129,9 @@ namespace AlgoritmoRecorte
             }
         }
 
+        
+        /// Dibuja una cuadrícula en el gráfico
+        
         public void DrawGrid(Graphics g, Size canvasSize)
         {
             int cellWidth = canvasSize.Width / 3;
