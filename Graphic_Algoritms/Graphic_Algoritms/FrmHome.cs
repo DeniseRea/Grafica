@@ -33,6 +33,9 @@ namespace Graphic_Algoritms
         private Point? segundoPunto = null;
         private bool esperandoPunto = false;
 
+        // Variable para el algoritmo de flood fill
+        private FloodFill floodFillAlgoritmo;
+
         public FrmHome()
         {
             InitializeComponent();
@@ -85,7 +88,7 @@ namespace Graphic_Algoritms
             }
         }
 
-        // ✅ NUEVO: Método para manejar clics en el canvas
+        // ✅ CORREGIDO: Método para manejar clics en el canvas
         private void PictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
             if (string.IsNullOrEmpty(algoritmoSeleccionado))
@@ -94,27 +97,51 @@ namespace Graphic_Algoritms
                 return;
             }
 
-            // Convertir coordenadas del mouse a coordenadas del sistema de coordenadas centrado
-            Point puntoCanvas = ConvertirCoordenadas(e.Location);
-
             switch (algoritmoSeleccionado)
             {
                 case "DDA":
                 case "Bresenham":
+                    Point puntoCanvas = ConvertirCoordenadas(e.Location);
                     ManejgarAlgoritmoLinea(puntoCanvas);
                     break;
-
                 case "Círculo":
-                    ManejarAlgoritmoCirculo(puntoCanvas);
+                    Point puntoCanvasCirculo = ConvertirCoordenadas(e.Location);
+                    ManejarAlgoritmoCirculo(puntoCanvasCirculo);
                     break;
-
                 case "Elipse":
-                    ShowNotification("Algoritmo de Elipse no implementado aún", false);
+                    Point puntoCanvasElipse = ConvertirCoordenadas(e.Location);
+                    ManejarAlgoritmoElipse(puntoCanvasElipse);
                     break;
-
+                case "Flood Fill":
+                    ManejarFloodFill(e.Location); // Usar coordenadas directas del mouse
+                    break;
                 default:
                     ShowNotification($"Algoritmo {algoritmoSeleccionado} no implementado", false);
                     break;
+            }
+        }
+
+        // ✅ NUEVO: Maneja algoritmo de flood fill
+        private void ManejarFloodFill(Point puntoMouse)
+        {
+            if (floodFillAlgoritmo == null)
+            {
+                floodFillAlgoritmo = new FloodFill(pictureBox1);
+                floodFillAlgoritmo.IniciarCreacionPoligono();
+                ShowNotification("Haga clic para crear vértices del polígono. Clic derecho para completar.");
+            }
+            else if (floodFillAlgoritmo.TienePoligonoCompleto)
+            {
+                // Aplicar flood fill
+                bool resultado = floodFillAlgoritmo.ProcesarClicFloodFill(puntoMouse, Color.Orange, 50);
+                if (resultado)
+                {
+                    ShowNotification("Flood Fill aplicado correctamente");
+                }
+                else
+                {
+                    ShowNotification("Haga clic dentro del polígono para rellenar", false);
+                }
             }
         }
 
@@ -167,6 +194,31 @@ namespace Graphic_Algoritms
             }
         }
 
+        // ✅ NUEVO: Maneja algoritmo de elipse
+        private void ManejarAlgoritmoElipse(Point puntoCanvas)
+        {
+            if (primerPunto == null)
+            {
+                // Primer clic: centro de la elipse
+                primerPunto = puntoCanvas;
+                esperandoPunto = true;
+                ShowNotification($"Centro: ({puntoCanvas.X}, {puntoCanvas.Y}). Haga clic para definir los semiejes.");
+                DibujarPuntoTemporal(puntoCanvas, Color.Purple);
+            }
+            else
+            {
+                // Segundo clic: define los semiejes
+                segundoPunto = puntoCanvas;
+                esperandoPunto = false;
+
+                EjecutarAlgoritmoElipse(primerPunto.Value, segundoPunto.Value);
+
+                // Resetear para próxima elipse
+                primerPunto = null;
+                segundoPunto = null;
+            }
+        }
+
         // ✅ NUEVO: Ejecuta algoritmos de línea
         private void EjecutarAlgoritmoLinea(Point inicio, Point fin)
         {
@@ -190,8 +242,7 @@ namespace Graphic_Algoritms
                     algoritmo.PuntoFinal = fin;
                     algoritmo.CalcularPuntos();
 
-                    
-                    var animacion = new Animation(algoritmo.Puntos, pictureBox1, Color.Black, 1, 100); // Escala 1, intervalo 100ms
+                    var animacion = new Animation(algoritmo.Puntos, pictureBox1, Color.Black, 1, 100);
                     animacion.Iniciar();
 
                     ShowNotification($"Animación iniciada con {algoritmoSeleccionado}: ({inicio.X},{inicio.Y}) → ({fin.X},{fin.Y})");
@@ -209,12 +260,11 @@ namespace Graphic_Algoritms
             try
             {
                 var circulo = new Circulo();
-                circulo.PuntoInicial = centro; // Centro del círculo
+                circulo.PuntoInicial = centro;
                 circulo.Radio = radio;
                 circulo.CalcularPuntos();
 
-                // ✅ Usar Animation para animar los puntos calculados
-                var animacion = new Animation(circulo.Puntos, pictureBox1, Color.Black, 1, 100); // Escala 1, intervalo 100ms
+                var animacion = new Animation(circulo.Puntos, pictureBox1, Color.Black, 1, 100);
                 animacion.Iniciar();
 
                 ShowNotification($"Animación iniciada para círculo: Centro({centro.X},{centro.Y}) Radio={radio}");
@@ -222,6 +272,29 @@ namespace Graphic_Algoritms
             catch (Exception ex)
             {
                 ShowNotification($"Error al dibujar círculo: {ex.Message}", false);
+            }
+        }
+
+        // ✅ NUEVO: Ejecuta algoritmo de elipse
+        private void EjecutarAlgoritmoElipse(Point centro, Point puntoRadio)
+        {
+            try
+            {
+                var elipse = new Elipse();
+                elipse.PuntoInicial = centro;
+                elipse.PuntoFinal = puntoRadio;
+                elipse.CalcularPuntos();
+
+                var animacion = new Animation(elipse.Puntos, pictureBox1, Color.Black, 1, 100);
+                animacion.Iniciar();
+
+                int rx = Math.Abs(puntoRadio.X - centro.X);
+                int ry = Math.Abs(puntoRadio.Y - centro.Y);
+                ShowNotification($"Animación iniciada para elipse: Centro({centro.X},{centro.Y}) Rx={rx} Ry={ry}");
+            }
+            catch (Exception ex)
+            {
+                ShowNotification($"Error al dibujar elipse: {ex.Message}", false);
             }
         }
 
@@ -307,10 +380,11 @@ namespace Graphic_Algoritms
             algoritmoSeleccionado = "";
             lblAlgoritmo.Text = "🎯 Algoritmo: Ninguno";
 
-            // ✅ NUEVO: Resetear estado de clics
+            // ✅ NUEVO: Resetear estado de clics y flood fill
             primerPunto = null;
             segundoPunto = null;
             esperandoPunto = false;
+            floodFillAlgoritmo = null;
         }
 
         private void ActualizarOpcionesAlgoritmo(string categoria)
@@ -345,6 +419,7 @@ namespace Graphic_Algoritms
                         primerPunto = null;
                         segundoPunto = null;
                         esperandoPunto = false;
+                        floodFillAlgoritmo = null;
                     }
                 };
 
@@ -355,7 +430,7 @@ namespace Graphic_Algoritms
             groupBox3.Visible = true;
         }
 
-        // ✅ NUEVO: Actualiza las instrucciones según el algoritmo seleccionado
+        // ✅ CORREGIDO: Actualiza las instrucciones según el algoritmo seleccionado
         private void ActualizarInstrucciones()
         {
             string instrucciones = "";
@@ -381,12 +456,30 @@ namespace Graphic_Algoritms
                                    "💡 Puede dibujar múltiples círculos";
                     break;
 
+                case "Elipse":
+                    instrucciones = "🎯 Algoritmo de Elipse\r\n\r\n" +
+                                   "📋 Instrucciones:\r\n" +
+                                   "1. Haga clic para definir el centro\r\n" +
+                                   "2. Haga clic para definir los semiejes (Rx, Ry)\r\n" +
+                                   "3. La elipse se dibujará automáticamente\r\n\r\n" +
+                                   "💡 Puede dibujar múltiples elipses";
+                    break;
+
+                case "Flood Fill":
+                    instrucciones = "🎨 Algoritmo Flood Fill\r\n\r\n" +
+                                   "📋 Instrucciones:\r\n" +
+                                   "1. Haga clics para crear vértices del polígono\r\n" +
+                                   "2. Clic derecho para completar el polígono\r\n" +
+                                   "3. Haga clic dentro para rellenar\r\n\r\n" +
+                                   "💡 Puede crear polígonos personalizados";
+                    break;
+
                 default:
                     instrucciones = $"🎯 {algoritmoSeleccionado}\r\n\r\n" +
                                    "⚠️ Este algoritmo está seleccionado pero\r\n" +
                                    "aún no está implementado.\r\n\r\n" +
-                                   "Seleccione DDA, Bresenham o Círculo\r\n" +
-                                   "para comenzar a dibujar.";
+                                   "Seleccione DDA, Bresenham, Círculo, Elipse\r\n" +
+                                   "o Flood Fill para comenzar a dibujar.";
                     break;
             }
 

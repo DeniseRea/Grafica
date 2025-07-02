@@ -46,21 +46,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Algorithms\Algoritmo.cs" />
-    <Compile Include="Algorithms\Animation.cs" />
-    <Compile Include="Algorithms\Bresenham.cs" />
-    <Compile Include="Algorithms\Circulo.cs" />
+    <Compile Include="Algorithms\Fill\PolygonDrawer.cs" />
+    <Compile Include="Algorithms\Rander\Algoritmo.cs" />
+    <Compile Include="Algorithms\Rander\Animation.cs" />
+    <Compile Include="Algorithms\Rander\Bresenham.cs" />
+    <Compile Include="Algorithms\Rander\Circulo.cs" />
     <Compile Include="Algorithms\Cut\ClipBoundary.cs" />
     <Compile Include="Algorithms\Cut\ClippingCanvas.cs" />
     <Compile Include="Algorithms\Cut\CohenSutherlandClipper.cs" />
-    <Compile Include="Algorithms\DDA.cs" />
-    <Compile Include="Algorithms\FloodFill.cs" />
+    <Compile Include="Algorithms\Rander\DDA.cs" />
+    <Compile Include="Algorithms\Fill\FloodFill.cs" />
     <Compile Include="Algorithms\Cut\IClipper.cs" />
     <Compile Include="Algorithms\Cut\IShape.cs" />
     <Compile Include="Algorithms\Cut\Line.cs" />
     <Compile Include="Algorithms\Cut\Point2D.cs" />
     <Compile Include="Algorithms\Cut\Polygon.cs" />
     <Compile Include="Algorithms\Cut\SutherlandHodgmanClipper.cs" />
+    <Compile Include="Algorithms\Rander\Elipse.cs" />
     <Compile Include="Design.cs" />
     <Compile Include="FrmHome.cs">
       <SubType>Form</SubType>

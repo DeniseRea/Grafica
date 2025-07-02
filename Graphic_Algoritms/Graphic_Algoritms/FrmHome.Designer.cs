@@ -44,6 +44,7 @@
             this.rdBtn_op2 = new System.Windows.Forms.RadioButton();
             this.rdBtn_op1 = new System.Windows.Forms.RadioButton();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.rdBtn_Animation = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox5.SuspendLayout();
@@ -140,17 +141,18 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.rdBtn_Animation);
             this.groupBox4.Controls.Add(this.btn_reset);
             this.groupBox4.Location = new System.Drawing.Point(28, 509);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(200, 122);
+            this.groupBox4.Size = new System.Drawing.Size(200, 156);
             this.groupBox4.TabIndex = 2;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Opciones";
             // 
             // btn_reset
             // 
-            this.btn_reset.Location = new System.Drawing.Point(25, 52);
+            this.btn_reset.Location = new System.Drawing.Point(25, 95);
             this.btn_reset.Name = "btn_reset";
             this.btn_reset.Size = new System.Drawing.Size(153, 44);
             this.btn_reset.TabIndex = 0;
@@ -223,6 +225,17 @@
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             // 
+            // rdBtn_Animation
+            // 
+            this.rdBtn_Animation.AutoSize = true;
+            this.rdBtn_Animation.Location = new System.Drawing.Point(25, 41);
+            this.rdBtn_Animation.Name = "rdBtn_Animation";
+            this.rdBtn_Animation.Size = new System.Drawing.Size(110, 27);
+            this.rdBtn_Animation.TabIndex = 4;
+            this.rdBtn_Animation.TabStop = true;
+            this.rdBtn_Animation.Text = "animación";
+            this.rdBtn_Animation.UseVisualStyleBackColor = true;
+            // 
             // FrmHome
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -237,6 +250,7 @@
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
             this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
@@ -262,5 +276,6 @@
         private System.Windows.Forms.RadioButton rdBtn_op3;
         private System.Windows.Forms.RadioButton rdBtn_op2;
         private System.Windows.Forms.RadioButton rdBtn_op1;
+        private System.Windows.Forms.RadioButton rdBtn_Animation;
     }
 }
