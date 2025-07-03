@@ -513,43 +513,10 @@ namespace Graphic_Algoritms
         // ✅ MEJORADO: Dibuja la ventana de recorte con información adicional
         private void DibujarVentanaRecorte()
         {
-            if (pictureBox1.Image == null) return;
-
-            using (Graphics g = Graphics.FromImage(pictureBox1.Image))
-            {
-                // Dibujar ventana principal en rojo punteado
-                using (var pen = new Pen(Color.Red, 3))
-                {
-                    pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
-                    g.DrawRectangle(pen, ventanaRecorte.X, ventanaRecorte.Y, ventanaRecorte.Width, ventanaRecorte.Height);
-                }
-
-                // Dibujar área de fondo semitransparente para mejor visibilidad
-                using (var brush = new SolidBrush(Color.FromArgb(30, Color.Red)))
-                {
-                    g.FillRectangle(brush, ventanaRecorte);
-                }
-
-                // Agregar texto informativo
-                using (var font = new Font("Arial", 10, FontStyle.Bold))
-                using (var brush = new SolidBrush(Color.DarkRed))
-                {
-                    string texto = "VENTANA DE RECORTE";
-                    var tamaño = g.MeasureString(texto, font);
-                    float x = ventanaRecorte.X + (ventanaRecorte.Width - tamaño.Width) / 2;
-                    float y = ventanaRecorte.Y - tamaño.Height - 5;
-                    
-                    // Fondo blanco para el texto
-                    using (var fondoBrush = new SolidBrush(Color.White))
-                    {
-                        g.FillRectangle(fondoBrush, x - 5, y - 2, tamaño.Width + 10, tamaño.Height + 4);
-                    }
-                    
-                    g.DrawString(texto, font, brush, x, y);
-                }
-            }
-            
-            pictureBox1.Refresh();
+            // ✅ NUEVO: El UX Enhancer ya maneja la visualización del área de recorte
+            // Solo necesitamos refrescar la visualización
+            uxEnhancer?.RefrescarVisualizacion();
+            pictureBox1.Invalidate();
         }
 
 
@@ -1408,6 +1375,15 @@ namespace Graphic_Algoritms
                 ShowNotification($"Punto de control agregado. Use 'Completar Curva' para finalizar la B-Spline (mínimo 4 puntos).");
                 ActualizarInstrucciones();
             }
+        }
+
+        /// <summary>
+        /// ✅ NUEVO: Limpia recursos al cerrar el formulario
+        /// </summary>
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            uxEnhancer?.Dispose();
+            base.OnFormClosed(e);
         }
 
     }

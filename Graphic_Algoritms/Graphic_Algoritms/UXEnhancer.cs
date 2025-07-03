@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -47,6 +47,12 @@ namespace Graphic_Algoritms
         {
             categoriaActual = categoria;
             
+            // Asegurar que tenemos una imagen en el PictureBox
+            if (pictureBox.Image == null)
+            {
+                pictureBox.Image = new Bitmap(pictureBox.Width, pictureBox.Height);
+            }
+            
             switch (categoria)
             {
                 case "Rasterizado":
@@ -58,6 +64,8 @@ namespace Graphic_Algoritms
                 case "Relleno":
                     mostrarPlano = false;
                     mostrarAreaRecorte = false;
+                    // Para relleno, solo limpiar y dejar área limpia
+                    LimpiarCanvas();
                     break;
                     
                 case "Recorte":
@@ -94,6 +102,9 @@ namespace Graphic_Algoritms
 
             using (Graphics g = Graphics.FromImage(pictureBox.Image))
             {
+                // Limpiar canvas primero
+                g.Clear(Color.White);
+                
                 // Configurar antialiasing para líneas suaves
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
@@ -200,6 +211,9 @@ namespace Graphic_Algoritms
 
             using (Graphics g = Graphics.FromImage(pictureBox.Image))
             {
+                // Limpiar canvas primero
+                g.Clear(Color.White);
+                
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
                 // Dibujar área de recorte
@@ -225,7 +239,7 @@ namespace Graphic_Algoritms
                 using (Font font = new Font("Arial", 10, FontStyle.Bold))
                 using (Brush brushTexto = new SolidBrush(Color.FromArgb(180, 0, 120, 0)))
                 {
-                    string info = $"Área de Recorte\\n({areaRecorte.X:F0}, {areaRecorte.Y:F0}) - ({areaRecorte.Right:F0}, {areaRecorte.Bottom:F0})";
+                    string info = $"Área de Recorte\n({areaRecorte.X:F0}, {areaRecorte.Y:F0}) - ({areaRecorte.Right:F0}, {areaRecorte.Bottom:F0})";
                     g.DrawString(info, font, brushTexto, areaRecorte.X, areaRecorte.Y - 30);
                 }
             }
@@ -296,6 +310,21 @@ namespace Graphic_Algoritms
         }
 
         /// <summary>
+        /// Limpia el canvas
+        /// </summary>
+        private void LimpiarCanvas()
+        {
+            if (pictureBox.Image == null) return;
+
+            using (Graphics g = Graphics.FromImage(pictureBox.Image))
+            {
+                g.Clear(Color.White);
+            }
+            
+            pictureBox.Invalidate();
+        }
+
+        /// <summary>
         /// Timer para desvanecer puntos de click antiguos
         /// </summary>
         private void TimerPuntos_Tick(object sender, EventArgs e)
@@ -353,6 +382,15 @@ namespace Graphic_Algoritms
             mostrarPlano = false;
             mostrarAreaRecorte = false;
             categoriaActual = "";
+            
+            if (pictureBox.Image != null)
+            {
+                using (Graphics g = Graphics.FromImage(pictureBox.Image))
+                {
+                    g.Clear(Color.White);
+                }
+                pictureBox.Invalidate();
+            }
         }
 
         /// <summary>
@@ -371,6 +409,9 @@ namespace Graphic_Algoritms
             return areaRecorte.Contains(punto);
         }
 
+        /// <summary>
+        /// Libera recursos
+        /// </summary>
         public void Dispose()
         {
             timerPuntos?.Stop();
