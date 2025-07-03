@@ -80,7 +80,7 @@ namespace AlgoritmosGraficar
         /**
          * Finaliza la creación del polígono
          */
-        public void CompletarPoligono()
+        /*public void CompletarPoligono()
         {
             if (Vertices.Count >= 3)
             {
@@ -93,7 +93,30 @@ namespace AlgoritmosGraficar
 
                 pictureBox.Invalidate();
             }
+        }*/
+
+        /**
+ * Finaliza la creación del polígono
+ */
+        public void CompletarPoligono()
+        {
+            if (Vertices.Count >= 3)
+            {
+                EstaCompleto = true;
+                modoCreacion = false;
+                mostrarPuntoTemporal = false;
+
+                // ✅ NUEVO: Desactivar eventos del mouse cuando se completa
+                pictureBox.MouseClick -= PictureBox_MouseClick;
+                pictureBox.MouseMove -= PictureBox_MouseMove;
+
+                // Disparar evento de polígono completado
+                PolygonCompleted?.Invoke(this, new PolygonCompletedEventArgs(this));
+
+                pictureBox.Invalidate();
+            }
         }
+
 
         /**
          * Cancela la creación del polígono

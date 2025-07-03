@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Algorithms\Fill\PolygonDrawer.cs" />
+    <Compile Include="Algorithms\Fill\ScanLine.cs" />
     <Compile Include="Algorithms\Rander\Algoritmo.cs" />
     <Compile Include="Algorithms\Rander\Animation.cs" />
     <Compile Include="Algorithms\Rander\Bresenham.cs" />

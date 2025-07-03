@@ -37,14 +37,12 @@
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.rdBtn_Animation = new System.Windows.Forms.RadioButton();
             this.btn_reset = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.rdBtn_op4 = new System.Windows.Forms.RadioButton();
-            this.rdBtn_op3 = new System.Windows.Forms.RadioButton();
-            this.rdBtn_op2 = new System.Windows.Forms.RadioButton();
-            this.rdBtn_op1 = new System.Windows.Forms.RadioButton();
+            this.btn_Draw = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.rdBtn_Animation = new System.Windows.Forms.RadioButton();
+            this.btn_Paint = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox5.SuspendLayout();
@@ -150,6 +148,17 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Opciones";
             // 
+            // rdBtn_Animation
+            // 
+            this.rdBtn_Animation.AutoSize = true;
+            this.rdBtn_Animation.Location = new System.Drawing.Point(25, 41);
+            this.rdBtn_Animation.Name = "rdBtn_Animation";
+            this.rdBtn_Animation.Size = new System.Drawing.Size(110, 27);
+            this.rdBtn_Animation.TabIndex = 4;
+            this.rdBtn_Animation.TabStop = true;
+            this.rdBtn_Animation.Text = "animación";
+            this.rdBtn_Animation.UseVisualStyleBackColor = true;
+            // 
             // btn_reset
             // 
             this.btn_reset.Location = new System.Drawing.Point(25, 95);
@@ -162,10 +171,8 @@
             // 
             // groupBox3
             // 
-            this.groupBox3.Controls.Add(this.rdBtn_op4);
-            this.groupBox3.Controls.Add(this.rdBtn_op3);
-            this.groupBox3.Controls.Add(this.rdBtn_op2);
-            this.groupBox3.Controls.Add(this.rdBtn_op1);
+            this.groupBox3.Controls.Add(this.btn_Paint);
+            this.groupBox3.Controls.Add(this.btn_Draw);
             this.groupBox3.Location = new System.Drawing.Point(28, 215);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(200, 275);
@@ -173,49 +180,15 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Escoge";
             // 
-            // rdBtn_op4
+            // btn_Draw
             // 
-            this.rdBtn_op4.AutoSize = true;
-            this.rdBtn_op4.Location = new System.Drawing.Point(23, 234);
-            this.rdBtn_op4.Name = "rdBtn_op4";
-            this.rdBtn_op4.Size = new System.Drawing.Size(74, 27);
-            this.rdBtn_op4.TabIndex = 3;
-            this.rdBtn_op4.TabStop = true;
-            this.rdBtn_op4.Text = "Elipse";
-            this.rdBtn_op4.UseVisualStyleBackColor = true;
-            // 
-            // rdBtn_op3
-            // 
-            this.rdBtn_op3.AutoSize = true;
-            this.rdBtn_op3.Location = new System.Drawing.Point(23, 178);
-            this.rdBtn_op3.Name = "rdBtn_op3";
-            this.rdBtn_op3.Size = new System.Drawing.Size(84, 27);
-            this.rdBtn_op3.TabIndex = 2;
-            this.rdBtn_op3.TabStop = true;
-            this.rdBtn_op3.Text = "Círculo";
-            this.rdBtn_op3.UseVisualStyleBackColor = true;
-            // 
-            // rdBtn_op2
-            // 
-            this.rdBtn_op2.AutoSize = true;
-            this.rdBtn_op2.Location = new System.Drawing.Point(23, 119);
-            this.rdBtn_op2.Name = "rdBtn_op2";
-            this.rdBtn_op2.Size = new System.Drawing.Size(116, 27);
-            this.rdBtn_op2.TabIndex = 1;
-            this.rdBtn_op2.TabStop = true;
-            this.rdBtn_op2.Text = "Bresenham";
-            this.rdBtn_op2.UseVisualStyleBackColor = true;
-            // 
-            // rdBtn_op1
-            // 
-            this.rdBtn_op1.AutoSize = true;
-            this.rdBtn_op1.Location = new System.Drawing.Point(25, 63);
-            this.rdBtn_op1.Name = "rdBtn_op1";
-            this.rdBtn_op1.Size = new System.Drawing.Size(66, 27);
-            this.rdBtn_op1.TabIndex = 0;
-            this.rdBtn_op1.TabStop = true;
-            this.rdBtn_op1.Text = "DDA";
-            this.rdBtn_op1.UseVisualStyleBackColor = true;
+            this.btn_Draw.Location = new System.Drawing.Point(34, 172);
+            this.btn_Draw.Name = "btn_Draw";
+            this.btn_Draw.Size = new System.Drawing.Size(120, 39);
+            this.btn_Draw.TabIndex = 4;
+            this.btn_Draw.Text = "Dibujar";
+            this.btn_Draw.UseVisualStyleBackColor = true;
+            this.btn_Draw.Click += new System.EventHandler(this.btn_Draw_Click);
             // 
             // pictureBox1
             // 
@@ -225,16 +198,15 @@
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             // 
-            // rdBtn_Animation
+            // btn_Paint
             // 
-            this.rdBtn_Animation.AutoSize = true;
-            this.rdBtn_Animation.Location = new System.Drawing.Point(25, 41);
-            this.rdBtn_Animation.Name = "rdBtn_Animation";
-            this.rdBtn_Animation.Size = new System.Drawing.Size(110, 27);
-            this.rdBtn_Animation.TabIndex = 4;
-            this.rdBtn_Animation.TabStop = true;
-            this.rdBtn_Animation.Text = "animación";
-            this.rdBtn_Animation.UseVisualStyleBackColor = true;
+            this.btn_Paint.Location = new System.Drawing.Point(34, 222);
+            this.btn_Paint.Name = "btn_Paint";
+            this.btn_Paint.Size = new System.Drawing.Size(120, 39);
+            this.btn_Paint.TabIndex = 5;
+            this.btn_Paint.Text = "Pintar";
+            this.btn_Paint.UseVisualStyleBackColor = true;
+            this.btn_Paint.Click += new System.EventHandler(this.btn_Paint_Click);
             // 
             // FrmHome
             // 
@@ -252,7 +224,6 @@
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
@@ -272,10 +243,9 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Button btn_reset;
-        private System.Windows.Forms.RadioButton rdBtn_op4;
-        private System.Windows.Forms.RadioButton rdBtn_op3;
-        private System.Windows.Forms.RadioButton rdBtn_op2;
-        private System.Windows.Forms.RadioButton rdBtn_op1;
         private System.Windows.Forms.RadioButton rdBtn_Animation;
+        private System.Windows.Forms.Button btn_CompletarPoligono;
+        private System.Windows.Forms.Button btn_Draw;
+        private System.Windows.Forms.Button btn_Paint;
     }
 }

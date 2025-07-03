@@ -35,6 +35,9 @@ namespace Graphic_Algoritms
 
         // Variable para el algoritmo de flood fill
         private FloodFill floodFillAlgoritmo;
+        private ScanLine scanLineAlgoritmo;
+        private bool modoCreacionPoligono = false; // ✅ NUEVO: Controla el modo de creación
+        private bool poligonoListo = false; // ✅ NUEVO: Indica si el polígono está listo para flood fill
 
         public FrmHome()
         {
@@ -88,7 +91,29 @@ namespace Graphic_Algoritms
             }
         }
 
-        // ✅ CORREGIDO: Método para manejar clics en el canvas
+        // ✅ NUEVO: Evento del botón completar polígono
+        private void btn_CompletarPoligono_Click(object sender, EventArgs e)
+        {
+            if (floodFillAlgoritmo != null && modoCreacionPoligono)
+            {
+                floodFillAlgoritmo.CompletarPoligono();
+                modoCreacionPoligono = false;
+                poligonoListo = true;
+                btn_CompletarPoligono.Visible = false;
+
+                ShowNotification("Polígono completado. Ahora haga clic dentro para aplicar Flood Fill.");
+
+                // Actualizar instrucciones
+                textBox1.Text = "🎨 Polígono Completado - Flood Fill\r\n\r\n" +
+                               "📋 Instrucciones:\r\n" +
+                               "🔒 El polígono ha sido cerrado correctamente\r\n" +
+                               "🎯 Haga clic DENTRO del polígono para rellenarlo\r\n" +
+                               "🎨 El relleno se animará automáticamente\r\n\r\n" +
+                               "💡 Use 'Resetear' para crear un nuevo polígono";
+            }
+        }
+
+        // ✅ MODIFICADO: Método para manejar clics en el canvas
         private void PictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
             if (string.IsNullOrEmpty(algoritmoSeleccionado))
@@ -113,44 +138,102 @@ namespace Graphic_Algoritms
                     ManejarAlgoritmoElipse(puntoCanvasElipse);
                     break;
                 case "Flood Fill":
-                    ManejarFloodFill(e.Location); // Usar coordenadas directas del mouse
+                    ManejarFloodFill(e.Location);
                     break;
+                case "Scanline": // ✅ NUEVO
+                    ManejarScanLine(e.Location);
+                    break;
+                
                 default:
                     ShowNotification($"Algoritmo {algoritmoSeleccionado} no implementado", false);
                     break;
             }
         }
 
-        // ✅ NUEVO: Maneja algoritmo de flood fill
+        // ✅ MODIFICADO: Maneja algoritmo de flood fill
+        /* private void ManejarFloodFill(Point puntoMouse)
+         {
+             if (floodFillAlgoritmo == null)
+             {
+                 // Iniciar creación de polígono
+                 floodFillAlgoritmo = new FloodFill(pictureBox1);
+                 floodFillAlgoritmo.IniciarCreacionPoligono();
+                 modoCreacionPoligono = true;
+                 poligonoListo = false;
+
+                 // Mostrar botón de dibujo
+                 btn_Draw.Visible = true;
+                 btn_Paint.Visible = false;
+
+                 ShowNotification("Modo creación: Haga clics para agregar vértices del polígono.");
+             }
+             else if (modoCreacionPoligono)
+             {
+                 // Seguir agregando vértices
+                 ShowNotification($"Vértice agregado. Total: {floodFillAlgoritmo.NumeroVertices + 1}. Use el botón 'Dibujar' cuando termine.");
+             }
+             else if (poligonoListo && floodFillAlgoritmo.TienePoligonoCompleto && !btn_Paint.Enabled)
+             {
+                 // Aplicar flood fill
+                 //bool resultado = floodFillAlgoritmo.ProcesarClicFloodFill(puntoMouse, Color.Orange, 450);
+                 bool resultado = true;
+                     floodFillAlgoritmo.FloodFillAnimado(pictureBox1, puntoMouse.X, puntoMouse.Y, Color.Orange, 150);
+                /* if (resultado)
+                 {
+                     ShowNotification("🎨 Flood Fill aplicado correctamente - Animación en progreso");
+                     btn_Paint.Enabled = true; // Reactivar el botón para permitir más pintados
+                 }
+                 else
+                 {
+                     ShowNotification("❌ Haga clic DENTRO del polígono para rellenar", false);
+                 }*/
+        //   }
+        //}
+        // ✅ CORREGIDO: Maneja algoritmo de flood fill
         private void ManejarFloodFill(Point puntoMouse)
         {
             if (floodFillAlgoritmo == null)
             {
+                // Iniciar creación de polígono
                 floodFillAlgoritmo = new FloodFill(pictureBox1);
                 floodFillAlgoritmo.IniciarCreacionPoligono();
-                ShowNotification("Haga clic para crear vértices del polígono. Clic derecho para completar.");
+                modoCreacionPoligono = true;
+                poligonoListo = false;
+
+                // Mostrar botón de dibujo
+                btn_Draw.Visible = true;
+                //btn_Paint.Visible = false;
+
+                ShowNotification("Modo creación: Haga clics para agregar vértices del polígono.");
             }
-            else if (floodFillAlgoritmo.TienePoligonoCompleto)
+            else if (modoCreacionPoligono)
             {
-                // Aplicar flood fill
+                // Seguir agregando vértices - el PolygonDrawer maneja esto automáticamente
+                ShowNotification($"Vértice agregado. Total: {floodFillAlgoritmo.NumeroVertices + 1}. Use el botón 'Completar Polígono' cuando termine.");
+            }
+            else if (poligonoListo && floodFillAlgoritmo.TienePoligonoCompleto)
+            {
+                // ✅ CAMBIO CLAVE: Remover la condición !btn_Paint.Enabled
+                // ✅ CAMBIO CLAVE: Usar ProcesarClicFloodFill en lugar de llamada directa
                 bool resultado = floodFillAlgoritmo.ProcesarClicFloodFill(puntoMouse, Color.Orange, 50);
                 if (resultado)
                 {
-                    ShowNotification("Flood Fill aplicado correctamente");
+                    ShowNotification("🎨 Flood Fill aplicado correctamente - Animación en progreso");
+                   // btn_Paint.Enabled = true; // Reactivar el botón para permitir más pintados
                 }
                 else
                 {
-                    ShowNotification("Haga clic dentro del polígono para rellenar", false);
+                    ShowNotification("❌ Haga clic DENTRO del polígono para rellenar", false);
                 }
             }
         }
 
-        // ✅ NUEVO: Maneja algoritmos de línea (DDA y Bresenham)
+
+        // ✅ RESTO DE MÉTODOS SIN CAMBIOS...
         private void ManejgarAlgoritmoLinea(Point puntoCanvas)
         {
             if (primerPunto == null)
             {
-                // Primer clic: guardar punto inicial
                 primerPunto = puntoCanvas;
                 esperandoPunto = true;
                 ShowNotification($"Punto inicial: ({puntoCanvas.X}, {puntoCanvas.Y}). Haga clic para el punto final.");
@@ -158,24 +241,54 @@ namespace Graphic_Algoritms
             }
             else
             {
-                // Segundo clic: dibujar línea
                 segundoPunto = puntoCanvas;
                 esperandoPunto = false;
-
                 EjecutarAlgoritmoLinea(primerPunto.Value, segundoPunto.Value);
-
-                // Resetear para próxima línea
                 primerPunto = null;
                 segundoPunto = null;
             }
         }
 
-        // ✅ NUEVO: Maneja algoritmo de círculo
+        // ✅ NUEVO: Maneja algoritmo de scan line
+        private void ManejarScanLine(Point puntoMouse)
+        {
+            if (scanLineAlgoritmo == null)
+            {
+                // Iniciar creación de polígono
+                scanLineAlgoritmo = new ScanLine(pictureBox1);
+                scanLineAlgoritmo.IniciarCreacionPoligono();
+                modoCreacionPoligono = true;
+                poligonoListo = false;
+
+                // Mostrar botón de dibujo
+                btn_Draw.Visible = true;
+                btn_Paint.Visible = false;
+
+                ShowNotification("Modo creación: Haga clics para agregar vértices del polígono.");
+            }
+            else if (modoCreacionPoligono)
+            {
+                ShowNotification($"Vértice agregado. Total: {scanLineAlgoritmo.NumeroVertices + 1}. Use el botón 'Completar Polígono' cuando termine.");
+            }
+            else if (poligonoListo && scanLineAlgoritmo.TienePoligonoCompleto)
+            {
+                bool resultado = scanLineAlgoritmo.ProcesarClicScanLine(Color.LightBlue, 50);
+                if (resultado)
+                {
+                    ShowNotification("🎨 ScanLine aplicado correctamente - Animación en progreso");
+                }
+                else
+                {
+                    ShowNotification("❌ Error al aplicar ScanLine", false);
+                }
+            }
+        }
+
+
         private void ManejarAlgoritmoCirculo(Point puntoCanvas)
         {
             if (primerPunto == null)
             {
-                // Primer clic: guardar centro del círculo
                 primerPunto = puntoCanvas;
                 esperandoPunto = true;
                 ShowNotification($"Centro: ({puntoCanvas.X}, {puntoCanvas.Y}). Haga clic para definir el radio.");
@@ -183,23 +296,17 @@ namespace Graphic_Algoritms
             }
             else
             {
-                // Segundo clic: calcular radio y dibujar círculo
                 int radio = CalcularDistancia(primerPunto.Value, puntoCanvas);
                 esperandoPunto = false;
-
                 EjecutarAlgoritmoCirculo(primerPunto.Value, radio);
-
-                // Resetear para próximo círculo
                 primerPunto = null;
             }
         }
 
-        // ✅ NUEVO: Maneja algoritmo de elipse
         private void ManejarAlgoritmoElipse(Point puntoCanvas)
         {
             if (primerPunto == null)
             {
-                // Primer clic: centro de la elipse
                 primerPunto = puntoCanvas;
                 esperandoPunto = true;
                 ShowNotification($"Centro: ({puntoCanvas.X}, {puntoCanvas.Y}). Haga clic para definir los semiejes.");
@@ -207,25 +314,19 @@ namespace Graphic_Algoritms
             }
             else
             {
-                // Segundo clic: define los semiejes
                 segundoPunto = puntoCanvas;
                 esperandoPunto = false;
-
                 EjecutarAlgoritmoElipse(primerPunto.Value, segundoPunto.Value);
-
-                // Resetear para próxima elipse
                 primerPunto = null;
                 segundoPunto = null;
             }
         }
 
-        // ✅ NUEVO: Ejecuta algoritmos de línea
         private void EjecutarAlgoritmoLinea(Point inicio, Point fin)
         {
             try
             {
                 Algoritmo algoritmo = null;
-
                 switch (algoritmoSeleccionado)
                 {
                     case "DDA":
@@ -241,10 +342,8 @@ namespace Graphic_Algoritms
                     algoritmo.PuntoInicial = inicio;
                     algoritmo.PuntoFinal = fin;
                     algoritmo.CalcularPuntos();
-
                     var animacion = new Animation(algoritmo.Puntos, pictureBox1, Color.Black, 1, 100);
                     animacion.Iniciar();
-
                     ShowNotification($"Animación iniciada con {algoritmoSeleccionado}: ({inicio.X},{inicio.Y}) → ({fin.X},{fin.Y})");
                 }
             }
@@ -254,7 +353,6 @@ namespace Graphic_Algoritms
             }
         }
 
-        // ✅ NUEVO: Ejecuta algoritmo de círculo
         private void EjecutarAlgoritmoCirculo(Point centro, int radio)
         {
             try
@@ -263,10 +361,8 @@ namespace Graphic_Algoritms
                 circulo.PuntoInicial = centro;
                 circulo.Radio = radio;
                 circulo.CalcularPuntos();
-
                 var animacion = new Animation(circulo.Puntos, pictureBox1, Color.Black, 1, 100);
                 animacion.Iniciar();
-
                 ShowNotification($"Animación iniciada para círculo: Centro({centro.X},{centro.Y}) Radio={radio}");
             }
             catch (Exception ex)
@@ -275,7 +371,6 @@ namespace Graphic_Algoritms
             }
         }
 
-        // ✅ NUEVO: Ejecuta algoritmo de elipse
         private void EjecutarAlgoritmoElipse(Point centro, Point puntoRadio)
         {
             try
@@ -284,10 +379,8 @@ namespace Graphic_Algoritms
                 elipse.PuntoInicial = centro;
                 elipse.PuntoFinal = puntoRadio;
                 elipse.CalcularPuntos();
-
                 var animacion = new Animation(elipse.Puntos, pictureBox1, Color.Black, 1, 100);
                 animacion.Iniciar();
-
                 int rx = Math.Abs(puntoRadio.X - centro.X);
                 int ry = Math.Abs(puntoRadio.Y - centro.Y);
                 ShowNotification($"Animación iniciada para elipse: Centro({centro.X},{centro.Y}) Rx={rx} Ry={ry}");
@@ -298,20 +391,15 @@ namespace Graphic_Algoritms
             }
         }
 
-        // ✅ NUEVO: Convierte coordenadas del mouse a coordenadas del sistema centrado
         private Point ConvertirCoordenadas(Point mousePoint)
         {
             int centroX = pictureBox1.Width / 2;
             int centroY = pictureBox1.Height / 2;
-
-            // Convertir a coordenadas del sistema centrado
             int x = mousePoint.X - centroX;
-            int y = centroY - mousePoint.Y; // Invertir Y para que crezca hacia arriba
-
+            int y = centroY - mousePoint.Y;
             return new Point(x, y);
         }
 
-        // ✅ NUEVO: Calcula la distancia entre dos puntos (para el radio del círculo)
         private int CalcularDistancia(Point p1, Point p2)
         {
             int dx = p2.X - p1.X;
@@ -319,7 +407,6 @@ namespace Graphic_Algoritms
             return (int)Math.Round(Math.Sqrt(dx * dx + dy * dy));
         }
 
-        // ✅ NUEVO: Dibuja un punto temporal para indicar selección
         private void DibujarPuntoTemporal(Point punto, Color color)
         {
             if (pictureBox1.Image == null)
@@ -335,8 +422,6 @@ namespace Graphic_Algoritms
                     int centroY = pictureBox1.Height / 2;
                     int pixelX = centroX + punto.X;
                     int pixelY = centroY - punto.Y;
-
-                    // Dibujar un pequeño círculo para marcar el punto
                     g.FillEllipse(brush, pixelX - 3, pixelY - 3, 6, 6);
                 }
             }
@@ -352,6 +437,13 @@ namespace Graphic_Algoritms
                            "3. Dibuje en el área blanca\r\n\r\n" +
                            "✨ ¡Comience seleccionando un algoritmo!";
             groupBox3.Visible = false;
+
+            // Ocultar botones al inicio
+            btn_Draw.Text = "Completar Polígono";
+            btn_Draw.Visible = false;
+            btn_Paint.Visible = false;
+            btn_Paint.Enabled = false;
+
         }
 
         private void ShowNotification(string mensaje, bool esExito = true)
@@ -380,16 +472,28 @@ namespace Graphic_Algoritms
             algoritmoSeleccionado = "";
             lblAlgoritmo.Text = "🎯 Algoritmo: Ninguno";
 
-            // ✅ NUEVO: Resetear estado de clics y flood fill
+            // Resetear estado de clics y flood fill
             primerPunto = null;
             segundoPunto = null;
             esperandoPunto = false;
             floodFillAlgoritmo = null;
+            modoCreacionPoligono = false;
+            poligonoListo = false;
+
+            // Resetear estado de botones
+            btn_Draw.Visible = false;
+            btn_Paint.Visible = false;
+            btn_Paint.Enabled = true;
         }
 
         private void ActualizarOpcionesAlgoritmo(string categoria)
         {
             groupBox3.Controls.Clear();
+            groupBox3.Controls.Add(btn_Draw);
+            groupBox3.Controls.Add(btn_Paint);
+
+            btn_Draw.Visible = false;
+            btn_Paint.Visible = false;
             groupBox3.Text = $"🔧 Opciones de {categoria}";
             if (!opcionesAlgoritmos.ContainsKey(categoria)) return;
 
@@ -411,15 +515,14 @@ namespace Graphic_Algoritms
                         algoritmoSeleccionado = rb.Text;
                         lblAlgoritmo.Text = $"🎯 Algoritmo: {algoritmoSeleccionado}";
                         ShowNotification($"Algoritmo {algoritmoSeleccionado} seleccionado");
-
-                        // ✅ NUEVO: Actualizar instrucciones según el algoritmo
                         ActualizarInstrucciones();
-
-                        // Resetear estado de clics
                         primerPunto = null;
                         segundoPunto = null;
                         esperandoPunto = false;
                         floodFillAlgoritmo = null;
+                        modoCreacionPoligono = false;
+                        poligonoListo = false;
+                        
                     }
                 };
 
@@ -430,7 +533,7 @@ namespace Graphic_Algoritms
             groupBox3.Visible = true;
         }
 
-        // ✅ CORREGIDO: Actualiza las instrucciones según el algoritmo seleccionado
+        // ✅ MODIFICADO: Instrucciones mejoradas para Flood Fill
         private void ActualizarInstrucciones()
         {
             string instrucciones = "";
@@ -469,10 +572,11 @@ namespace Graphic_Algoritms
                     instrucciones = "🎨 Algoritmo Flood Fill\r\n\r\n" +
                                    "📋 Instrucciones:\r\n" +
                                    "1. Haga clics para crear vértices del polígono\r\n" +
-                                   "2. Clic derecho para completar el polígono\r\n" +
-                                   "3. Haga clic dentro para rellenar\r\n\r\n" +
-                                   "💡 Puede crear polígonos personalizados";
+                                   "2. Use el botón '🔒 Completar Polígono'\r\n" +
+                                   "3. Haga clic DENTRO para rellenar\r\n\r\n" +
+                                   "💡 El botón aparecerá automáticamente";
                     break;
+
 
                 default:
                     instrucciones = $"🎯 {algoritmoSeleccionado}\r\n\r\n" +
@@ -482,6 +586,7 @@ namespace Graphic_Algoritms
                                    "o Flood Fill para comenzar a dibujar.";
                     break;
             }
+
 
             if (!string.IsNullOrEmpty(instrucciones))
             {
@@ -509,6 +614,16 @@ namespace Graphic_Algoritms
                            "Técnicas para rellenar regiones cerradas con colores o patrones.\r\n" +
                            "Seleccione un algoritmo y haga clic en una región para rellenar.";
             ActualizarOpcionesAlgoritmo("Relleno");
+            groupBox3.Visible = true;
+            btn_Draw.Visible = true;
+            btn_Draw.Enabled = true;
+            btn_Draw.Text = "Completar Polígono";
+
+            //btn_Paint.Visible = true;
+            //btn_Paint.Enabled = false;
+            btn_Draw.BackColor = Color.Red;
+            //btn_Paint.BackColor = Color.Orange;
+
         }
 
         private void btn_CutAlg_Click(object sender, EventArgs e)
@@ -531,5 +646,94 @@ namespace Graphic_Algoritms
         {
             ResetCanvas();
         }
+
+        private void btn_Draw_Click(object sender, EventArgs e)
+        {
+            if (algoritmoSeleccionado == "Flood Fill")
+            {
+                if (floodFillAlgoritmo != null && modoCreacionPoligono)
+                {
+                    floodFillAlgoritmo.CompletarPoligono();
+                    modoCreacionPoligono = false;
+                    poligonoListo = true;
+
+                    btn_Draw.Visible = false;
+                    btn_Paint.Visible = true;
+
+                    ShowNotification("Polígono completado. Ahora use el botón 'Pintar' para rellenar.");
+                }
+            }
+            else if (algoritmoSeleccionado == "Scanline") // ✅ NUEVO
+            {
+                if (scanLineAlgoritmo != null && modoCreacionPoligono)
+                {
+                    scanLineAlgoritmo.CompletarPoligono();
+                    modoCreacionPoligono = false;
+                    poligonoListo = true;
+
+                    btn_Draw.Visible = false;
+                    btn_Paint.Visible = true;
+
+                    ShowNotification("Polígono completado. Ahora use el botón 'Pintar' para rellenar.");
+                }
+            }
+        
+
+            if (algoritmoSeleccionado == "Flood Fill")
+            {
+                if (floodFillAlgoritmo != null && modoCreacionPoligono)
+                {
+                    floodFillAlgoritmo.CompletarPoligono();
+                    modoCreacionPoligono = false;
+                    poligonoListo = true;
+
+                    btn_Draw.Visible = false;
+                    btn_Paint.Visible = true;
+
+                    ShowNotification("Polígono completado. Ahora use el botón 'Pintar' para rellenar.");
+
+                    textBox1.Text = "🎨 Polígono Completado\r\n\r\n" +
+                                   "📋 Instrucciones:\r\n" +
+                                   "1. El polígono ha sido cerrado ✅\r\n" +
+                                   "2. Presione el botón 'Pintar' para rellenar\r\n" +
+                                   "3. Haga clic dentro del polígono\r\n\r\n" +
+                                   "💡 Use 'Resetear' para comenzar de nuevo";
+                }
+            }
+            else if (algoritmoSeleccionado.Contains("Recorte"))
+            {
+                // Aquí debes llamar tu lógica de recorte (ejemplo)
+                ShowNotification("✂️ Iniciando recorte...");
+                // TODO: Aquí invoca tu método de recorte según tipo
+            }
+        }
+
+
+        private void btn_Paint_Click(object sender, EventArgs e)
+        {
+            if (algoritmoSeleccionado == "Flood Fill")
+            {
+                if (poligonoListo && floodFillAlgoritmo != null && floodFillAlgoritmo.TienePoligonoCompleto)
+                {
+                    ShowNotification("Modo pintado activado. Haga clic dentro del polígono para rellenar.");
+                }
+            }
+            else if (algoritmoSeleccionado == "Scanline") // ✅ NUEVO
+            {
+                if (poligonoListo && scanLineAlgoritmo != null && scanLineAlgoritmo.TienePoligonoCompleto)
+                {
+                    bool resultado = scanLineAlgoritmo.ProcesarClicScanLine(Color.LightBlue, 50);
+                    if (resultado)
+                    {
+                        ShowNotification("🎨 ScanLine aplicado correctamente - Animación línea por línea");
+                    }
+                }
+            }
+            else
+            {
+                ShowNotification("Complete el polígono primero usando el botón 'Completar Polígono'", false);
+            }
+        }
+
     }
 }

@@ -1,10 +1,10 @@
 ﻿/**
- * Clase Rombo
+ * Clase FloodFill
  * 
- * Representa un rombo alargado que puede dibujarse en un PictureBox.
- * Incluye funcionalidades para dibujar el borde y relleno, detectar
- * si un punto está dentro del rombo y animar el proceso de relleno.
- *
+ * Representa un algoritmo de relleno por inundación (Flood Fill) animado,
+ * con soporte para trabajar dentro de un polígono dibujado por el usuario.
+ * Soporta la detección de clics, cálculo de puntos válidos y relleno progresivo.
+ * 
  * @author Denise Rea
  */
 using System;
@@ -16,15 +16,9 @@ namespace AlgoritmosGraficar
 {
     public class FloodFill
     {
-        /**
-         * Propiedades del algoritmo de relleno
-         */
         public Color ColorRelleno { get; set; }
         public bool EstaActivo { get; private set; }
 
-        /**
-         * Variables para controlar la animación del relleno
-         */
         private Timer animacionTimer;
         private Queue<Point> puntosParaPintar;
         private Bitmap bmpAnimacion;
@@ -32,98 +26,107 @@ namespace AlgoritmosGraficar
         private Color colorAnimacion;
         private Color colorOriginal;
 
-        /**
-         * Polígono personalizado creado por el usuario
-         */
         private PolygonDrawer polygonDrawer;
 
-        /**
-         * Constructor
-         */
         public FloodFill(PictureBox pictureBox)
         {
             pictureBoxAnimacion = pictureBox ?? throw new ArgumentNullException(nameof(pictureBox));
             ColorRelleno = Color.FromArgb(255, 168, 38);
             EstaActivo = false;
 
-            // Inicializar el dibujador de polígonos
-            polygonDrawer = new PolygonDrawer(pictureBox);
+            polygonDrawer = new PolygonDrawer(pictureBoxAnimacion);
             polygonDrawer.ColorRelleno = ColorRelleno;
-
-            // Configurar evento cuando el polígono se complete
             polygonDrawer.PolygonCompleted += OnPolygonCompleted;
         }
 
-        /**
-         * Inicia el modo de creación de polígono
-         */
         public void IniciarCreacionPoligono()
         {
-            LimpiarPictureBox(pictureBoxAnimacion);
+            if (pictureBoxAnimacion.Image == null)
+            {
+                pictureBoxAnimacion.Image = new Bitmap(pictureBoxAnimacion.Width, pictureBoxAnimacion.Height);
+                using (Graphics g = Graphics.FromImage(pictureBoxAnimacion.Image))
+                {
+                    g.Clear(Color.White);
+                }
+            }
+
             polygonDrawer.IniciarCreacion();
             EstaActivo = true;
         }
 
-        /**
-         * Evento que se dispara cuando se completa el polígono
-         */
         private void OnPolygonCompleted(object sender, PolygonCompletedEventArgs e)
         {
-            // El polígono está listo para ser rellenado
-            // Se puede hacer clic dentro para aplicar flood fill
+            // Evento opcional cuando se termina de dibujar el polígono
         }
 
-        /**
-         * Procesa un clic para flood fill (solo si hay un polígono completo)
-         */
         public bool ProcesarClicFloodFill(Point puntoClick, Color colorInundacion, int intervalo = 10)
         {
             if (!polygonDrawer.EstaCompleto)
-                return false;
-
-            if (polygonDrawer.ContienePunto(puntoClick))
             {
-                FloodFillAnimado(puntoClick.X, puntoClick.Y, colorInundacion, intervalo);
-                return true;
+                System.Diagnostics.Debug.WriteLine("❌ Polígono no está completo");
+                return false;
             }
-            return false;
+
+            if (!polygonDrawer.ContienePunto(puntoClick))
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ Punto ({puntoClick.X}, {puntoClick.Y}) fuera del polígono");
+                return false;
+            }
+
+            if (pictureBoxAnimacion.Image == null)
+            {
+                System.Diagnostics.Debug.WriteLine("❌ Imagen es null");
+                return false;
+            }
+
+            if (puntoClick.X < 0 || puntoClick.X >= pictureBoxAnimacion.Image.Width ||
+                puntoClick.Y < 0 || puntoClick.Y >= pictureBoxAnimacion.Image.Height)
+            {
+                System.Diagnostics.Debug.WriteLine("❌ Punto fuera de límites de imagen");
+                return false;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"✅ Iniciando flood fill en ({puntoClick.X}, {puntoClick.Y})");
+            FloodFillAnimado(pictureBoxAnimacion, puntoClick.X, puntoClick.Y, colorInundacion, intervalo);
+            return true;
         }
 
-        /**
-         * Implementa el algoritmo de inundación (flood fill) con animación
-         */
-        private void FloodFillAnimado(int x, int y, Color colorRelleno, int intervalo = 10)
+        // ✅ FloodFillAnimado actualizado: recibe el PictureBox como parámetro
+        public void FloodFillAnimado(PictureBox pictureBox, int x, int y, Color colorRelleno, int intervalo = 10)
         {
-            if (pictureBoxAnimacion.Image == null) return;
+            if (pictureBox == null || pictureBox.Image == null)
+                return;
 
-            bmpAnimacion = pictureBoxAnimacion.Image as Bitmap;
+            pictureBoxAnimacion = pictureBox;
+            bmpAnimacion = pictureBox.Image as Bitmap;
+
             colorOriginal = bmpAnimacion.GetPixel(x, y);
-
-            if (colorOriginal.ToArgb() == colorRelleno.ToArgb()) return;
+            if (colorOriginal.ToArgb() == colorRelleno.ToArgb())
+                return;
 
             colorAnimacion = colorRelleno;
             puntosParaPintar = new Queue<Point>();
-            ObtenerPuntosParaInundacion(bmpAnimacion, x, y, colorOriginal, puntosParaPintar);
+            ObtenerPuntosParaInundacion(x, y, colorOriginal);
 
-            if (animacionTimer == null)
+            if (animacionTimer != null)
             {
-                animacionTimer = new Timer();
-                animacionTimer.Tick += AnimacionTimer_Tick;
+                animacionTimer.Stop();
+                animacionTimer.Dispose();
             }
 
+            animacionTimer = new Timer();
             animacionTimer.Interval = intervalo;
+            animacionTimer.Tick += AnimacionTimer_Tick;
             animacionTimer.Start();
 
             polygonDrawer.EstaRelleno = true;
             polygonDrawer.ColorRelleno = colorRelleno;
         }
 
-        /**
-         * Calcula todos los puntos a pintar en el proceso de inundación
-         */
-        private void ObtenerPuntosParaInundacion(Bitmap bmp, int x, int y, Color targetColor, Queue<Point> puntos)
+        private void ObtenerPuntosParaInundacion(int x, int y, Color targetColor)
         {
             Stack<Point> stack = new Stack<Point>();
+            HashSet<Point> visitados = new HashSet<Point>();
             stack.Push(new Point(x, y));
 
             while (stack.Count > 0)
@@ -132,40 +135,50 @@ namespace AlgoritmosGraficar
                 int px = p.X;
                 int py = p.Y;
 
-                if (px < 0 || px >= bmp.Width || py < 0 || py >= bmp.Height)
+                if (px < 0 || px >= bmpAnimacion.Width || py < 0 || py >= bmpAnimacion.Height)
                     continue;
 
-                if (bmp.GetPixel(px, py).ToArgb() != targetColor.ToArgb())
+                if (visitados.Contains(p))
                     continue;
 
-                puntos.Enqueue(new Point(px, py));
-                bmp.SetPixel(px, py, Color.FromArgb(0, 0, 0, 1));
+                if (!polygonDrawer.ContienePunto(p))
+                    continue;
 
-                stack.Push(new Point(px, py + 1));
+                Color colorActual = bmpAnimacion.GetPixel(px, py);
+                if (colorActual.ToArgb() != targetColor.ToArgb())
+                    continue;
+
+                visitados.Add(p);
+                puntosParaPintar.Enqueue(p);
+
                 stack.Push(new Point(px + 1, py));
-                stack.Push(new Point(px, py - 1));
                 stack.Push(new Point(px - 1, py));
-            }
-
-            // Redibujar solo el borde del polígono
-            using (Graphics g = Graphics.FromImage(bmp))
-            {
-                g.Clear(Color.White);
-                polygonDrawer.DibujarBorde(pictureBoxAnimacion);
+                stack.Push(new Point(px, py + 1));
+                stack.Push(new Point(px, py - 1));
             }
         }
 
-        /**
-         * Manejador del evento Tick del Timer de animación
-         */
         private void AnimacionTimer_Tick(object sender, EventArgs e)
         {
-            int puntosAPintar = 50;
+            int puntosAPintar = 100;
 
             if (puntosParaPintar.Count == 0)
             {
                 animacionTimer.Stop();
-                polygonDrawer.DibujarBorde(pictureBoxAnimacion);
+
+                using (Graphics g = Graphics.FromImage(bmpAnimacion))
+                {
+                    using (Pen pen = new Pen(polygonDrawer.ColorBorde, 2))
+                    {
+                        if (polygonDrawer.Vertices.Count >= 3)
+                        {
+                            Point[] vertices = polygonDrawer.Vertices.ToArray();
+                            g.DrawPolygon(pen, vertices);
+                        }
+                    }
+                }
+
+                pictureBoxAnimacion.Refresh();
                 return;
             }
 
@@ -178,38 +191,27 @@ namespace AlgoritmosGraficar
             pictureBoxAnimacion.Refresh();
         }
 
-        /**
-         * Completa el polígono actual
-         */
         public void CompletarPoligono()
         {
             polygonDrawer.CompletarPoligono();
         }
 
-        /**
-         * Cancela la creación del polígono actual
-         */
         public void CancelarPoligono()
         {
             polygonDrawer.CancelarCreacion();
             EstaActivo = false;
         }
 
-        /**
-         * Limpia el PictureBox estableciendo todos los píxeles en blanco
-         */
         public static void LimpiarPictureBox(PictureBox pictureBox)
         {
             if (pictureBox == null) return;
 
-            Bitmap bmp = pictureBox.Image as Bitmap;
-            if (bmp == null)
+            if (pictureBox.Image == null)
             {
-                bmp = new Bitmap(pictureBox.Width, pictureBox.Height);
-                pictureBox.Image = bmp;
+                pictureBox.Image = new Bitmap(pictureBox.Width, pictureBox.Height);
             }
 
-            using (Graphics g = Graphics.FromImage(bmp))
+            using (Graphics g = Graphics.FromImage(pictureBox.Image))
             {
                 g.Clear(Color.White);
             }
@@ -217,9 +219,6 @@ namespace AlgoritmosGraficar
             pictureBox.Refresh();
         }
 
-        /**
-         * Propiedades de acceso al polígono
-         */
         public bool TienePoligonoCompleto => polygonDrawer?.EstaCompleto ?? false;
         public int NumeroVertices => polygonDrawer?.Vertices?.Count ?? 0;
     }
