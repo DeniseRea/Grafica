@@ -8,7 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AlgoritmosGraficar;
-
+using Cut_Algorithms; // ✅ AGREGAR ESTA LÍNEA
+using CurvasParametricas; // ✅ AGREGAR ESTA LÍNEA PARA CURVAS
 namespace Graphic_Algoritms
 {
     public partial class FrmHome : Form
@@ -34,14 +35,43 @@ namespace Graphic_Algoritms
         private bool esperandoPunto = false;
 
         // Variable para el algoritmo de flood fill
-        private FloodFill floodFillAlgoritmo;
+        public FloodFill floodFillAlgoritmo;
         private ScanLine scanLineAlgoritmo;
         private bool modoCreacionPoligono = false; // ✅ NUEVO: Controla el modo de creación
         private bool poligonoListo = false; // ✅ NUEVO: Indica si el polígono está listo para flood fill
 
+
+
+        // Variables para algoritmos de recorte
+        private List<Cut_Algorithms.IShape> formasParaRecortar = new List<Cut_Algorithms.IShape>();
+        private RectangleF ventanaRecorte; // Ventana calculada automáticamente (octante central)
+        private Cut_Algorithms.CohenSutherlandClipper cohenSutherlandClipper = new Cut_Algorithms.CohenSutherlandClipper();
+        private Cut_Algorithms.SutherlandHodgmanClipper sutherlandHodgmanClipper = new Cut_Algorithms.SutherlandHodgmanClipper();
+        private string estadoRecorte = ""; // Estado actual del proceso de recorte
+        
+        // Variables para creación de formas de recorte
+        private Point? puntoInicialLinea = null;
+        private List<Point2D> verticesPoligonoRecorte = new List<Point2D>();
+        // Variables para curvas paramétricas
+        private AdministradorCurvas administradorCurvas;
+        
+        // ✅ NUEVO: UX Enhancer para mejoras visuales
+        private UXEnhancer uxEnhancer;
+
+
         public FrmHome()
         {
             InitializeComponent();
+
+            // Inicializar administrador de curvas
+            administradorCurvas = new AdministradorCurvas(pictureBox1);
+            administradorCurvas.CurvaCompletada += (sender, args) =>
+            {
+                ShowNotification($"Curva {args.Curva.GetType().Name} completada correctamente.");
+            };
+            
+            // ✅ NUEVO: Inicializar UX Enhancer
+            uxEnhancer = new UXEnhancer(pictureBox1);
 
             // Aplicar diseño desde la clase FrmHomeDesign
             FrmHomeDesign.ApplyDesign(
@@ -122,6 +152,9 @@ namespace Graphic_Algoritms
                 return;
             }
 
+            // ✅ NUEVO: Registrar click para visualización UX
+            uxEnhancer.RegistrarClick(e.Location);
+
             switch (algoritmoSeleccionado)
             {
                 case "DDA":
@@ -143,7 +176,18 @@ namespace Graphic_Algoritms
                 case "Scanline": // ✅ NUEVO
                     ManejarScanLine(e.Location);
                     break;
-                
+                case "Cohen–Sutherland (líneas)": // ✅ NUEVO
+                    ManejarRecorteCohenSutherland(e.Location);
+                    break;
+                case "Sutherland–Hodgman (polígonos)": // ✅ NUEVO
+                    ManejarRecorteSutherlandHodgman(e.Location);
+                    break;
+                case "Bézier": // ✅ NUEVO PARA CURVAS
+                    ManejarCurvaBezier(e.Location);
+                    break;
+                case "B-spline": // ✅ NUEVO PARA CURVAS
+                    ManejarCurvaBSpline(e.Location);
+                    break;
                 default:
                     ShowNotification($"Algoritmo {algoritmoSeleccionado} no implementado", false);
                     break;
@@ -219,7 +263,7 @@ namespace Graphic_Algoritms
                 if (resultado)
                 {
                     ShowNotification("🎨 Flood Fill aplicado correctamente - Animación en progreso");
-                   // btn_Paint.Enabled = true; // Reactivar el botón para permitir más pintados
+                    // btn_Paint.Enabled = true; // Reactivar el botón para permitir más pintados
                 }
                 else
                 {
@@ -248,8 +292,269 @@ namespace Graphic_Algoritms
                 segundoPunto = null;
             }
         }
+        
+        // ✅ MEJORADO: Maneja el algoritmo Cohen-Sutherland simplificado
+        private void ManejarRecorteCohenSutherland(Point puntoMouse)
+        {
+            switch (estadoRecorte)
+            {
+                case "":
+                    // Iniciar proceso: crear líneas directamente
+                    estadoRecorte = "crear_lineas";
+                    CalcularVentanaRecorteAutomatica();
+                    DibujarVentanaRecorte();
+                    ShowNotification("Cohen-Sutherland iniciado. Ventana de recorte calculada automáticamente en el centro del canvas. Cree líneas haciendo clic en pares de puntos.");
+                    ActualizarInstrucciones();
+                    break;
+                
+                case "crear_lineas":
+                    ManejarCreacionLinea(puntoMouse);
+                    break;
+            }
+        }
 
-        // ✅ NUEVO: Maneja algoritmo de scan line
+        // ✅ MEJORADO: Maneja el algoritmo Sutherland-Hodgman simplificado
+        private void ManejarRecorteSutherlandHodgman(Point puntoMouse)
+        {
+            switch (estadoRecorte)
+            {
+                case "":
+                    // Iniciar proceso: crear polígonos directamente
+                    estadoRecorte = "crear_poligonos";
+                    CalcularVentanaRecorteAutomatica();
+                    DibujarVentanaRecorte();
+                    ShowNotification("Sutherland-Hodgman iniciado. Ventana de recorte calculada automáticamente en el centro del canvas. Cree polígonos haciendo clic en vértices.");
+                    ActualizarInstrucciones();
+                    break;
+                
+                case "crear_poligonos":
+                    ManejarCreacionPoligonoRecorte(puntoMouse);
+                    break;
+            }
+        }
+
+        // ✅ MEJORADO: Calcula la ventana de recorte automáticamente usando el octante central
+        // Según los algoritmos clásicos de Cohen-Sutherland y Sutherland-Hodgman
+        private void CalcularVentanaRecorteAutomatica()
+        {
+            // ✅ NUEVO: Usar el área de recorte del UX Enhancer
+            ventanaRecorte = uxEnhancer.ObtenerAreaRecorte();
+            
+            // Si el UX Enhancer no tiene área configurada, calcular manualmente
+            if (ventanaRecorte.IsEmpty)
+            {
+                // Obtener dimensiones del canvas
+                int anchoCanvas = pictureBox1.Width;
+                int altoCanvas = pictureBox1.Height;
+                
+                // Calcular centro del canvas
+                int centroX = anchoCanvas / 2;
+                int centroY = altoCanvas / 2;
+                
+                // Definir la ventana de recorte como el octante central
+                // Usando aproximadamente 40% del área total, centrada
+                int anchoVentana = (int)(anchoCanvas * 0.4);
+                int altoVentana = (int)(altoCanvas * 0.4);
+                
+                // Calcular posición para centrar la ventana
+                int x = centroX - (anchoVentana / 2);
+                int y = centroY - (altoVentana / 2);
+                
+                // Asegurar que la ventana esté dentro de los límites del canvas
+                x = Math.Max(0, Math.Min(x, anchoCanvas - anchoVentana));
+                y = Math.Max(0, Math.Min(y, altoCanvas - altoVentana));
+                
+                ventanaRecorte = new RectangleF(x, y, anchoVentana, altoVentana);
+            }
+        }
+
+        // ✅ NUEVO: Maneja la creación de líneas para Cohen-Sutherland
+        private void ManejarCreacionLinea(Point puntoMouse)
+        {
+            if (puntoInicialLinea == null)
+            {
+                puntoInicialLinea = puntoMouse;
+                ShowNotification($"Punto inicial de línea: ({puntoMouse.X}, {puntoMouse.Y}). Haga clic para el punto final.");
+                DibujarPuntoTemporal(puntoMouse, Color.Blue);
+            }
+            else
+            {
+                // Crear línea
+                var linea = new Cut_Algorithms.Line(
+                    new Cut_Algorithms.Point2D(puntoInicialLinea.Value.X, puntoInicialLinea.Value.Y),
+                    new Cut_Algorithms.Point2D(puntoMouse.X, puntoMouse.Y)
+                );
+                
+                formasParaRecortar.Add(linea);
+                DibujarForma(linea, Color.Blue);
+                DibujarVentanaRecorte(); // Redibujar ventana encima
+                
+                puntoInicialLinea = null;
+                
+                // Habilitar botón de recorte si hay al menos una línea
+                if (formasParaRecortar.Count > 0)
+                {
+                    btn_Paint.Enabled = true;
+                }
+                
+                ShowNotification($"Línea creada. Total: {formasParaRecortar.Count}. Continúe creando líneas o use 'Aplicar Recorte'.");
+                ActualizarInstrucciones();
+            }
+        }
+
+        // ✅ NUEVO: Maneja la creación de polígonos para Sutherland-Hodgman
+        private void ManejarCreacionPoligonoRecorte(Point puntoMouse)
+        {
+            verticesPoligonoRecorte.Add(new Cut_Algorithms.Point2D(puntoMouse.X, puntoMouse.Y));
+            DibujarPuntoTemporal(puntoMouse, Color.Purple);
+            
+            if (verticesPoligonoRecorte.Count > 1)
+            {
+                // Dibujar línea temporal del polígono
+                DibujarLineaTemporal(
+                    new Point((int)verticesPoligonoRecorte[verticesPoligonoRecorte.Count - 2].X, 
+                             (int)verticesPoligonoRecorte[verticesPoligonoRecorte.Count - 2].Y),
+                    new Point((int)verticesPoligonoRecorte[verticesPoligonoRecorte.Count - 1].X, 
+                             (int)verticesPoligonoRecorte[verticesPoligonoRecorte.Count - 1].Y),
+                    Color.Purple
+                );
+            }
+            
+            ShowNotification($"Vértice agregado. Total: {verticesPoligonoRecorte.Count}. Use 'Completar Forma' para finalizar el polígono.");
+        }
+
+        // ✅ NUEVO: Completa el polígono actual para Sutherland-Hodgman
+        private void CompletarPoligonoRecorte()
+        {
+            if (verticesPoligonoRecorte.Count >= 3)
+            {
+                var poligono = new Cut_Algorithms.Polygon(verticesPoligonoRecorte);
+                formasParaRecortar.Add(poligono);
+                DibujarForma(poligono, Color.Purple);
+                DibujarVentanaRecorte(); // Redibujar ventana encima
+                
+                verticesPoligonoRecorte.Clear();
+                
+                // Habilitar botón de recorte si hay al menos un polígono
+                if (formasParaRecortar.Count > 0)
+                {
+                    btn_Paint.Enabled = true;
+                }
+                
+                ShowNotification($"Polígono completado. Total: {formasParaRecortar.Count}. Continúe creando polígonos o use 'Aplicar Recorte'.");
+            }
+            else
+            {
+                ShowNotification("Un polígono necesita al menos 3 vértices.", false);
+            }
+        }
+
+        // ✅ NUEVO: Limpia el canvas manteniendo el fondo blanco
+        private void LimpiarCanvas()
+        {
+            if (pictureBox1.Image == null)
+            {
+                pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            }
+
+            using (Graphics g = Graphics.FromImage(pictureBox1.Image))
+            {
+                g.Clear(Color.White);
+            }
+            pictureBox1.Refresh();
+        }
+
+
+        // ✅ NUEVO: Dibuja una forma en el canvas
+        private void DibujarForma(Cut_Algorithms.IShape forma, Color color)
+        {
+            if (pictureBox1.Image == null)
+            {
+                pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+                using (Graphics g = Graphics.FromImage(pictureBox1.Image))
+                {
+                    g.Clear(Color.White);
+                }
+            }
+
+            using (Graphics g = Graphics.FromImage(pictureBox1.Image))
+            {
+                if (forma is Cut_Algorithms.Line linea)
+                {
+                    using (Pen pen = new Pen(color, 2))
+                    {
+                        g.DrawLine(pen, linea.Start.X, linea.Start.Y, linea.End.X, linea.End.Y);
+                    }
+                }
+                else if (forma is Cut_Algorithms.Polygon poligono)
+                {
+                    var puntos = poligono.GetPoints().Select(p => new PointF(p.X, p.Y)).ToArray();
+                    using (Pen pen = new Pen(color, 2))
+                    {
+                        if (puntos.Length > 2)
+                        {
+                            g.DrawPolygon(pen, puntos);
+                        }
+                        else if (puntos.Length == 2)
+                        {
+                            g.DrawLine(pen, puntos[0], puntos[1]);
+                        }
+                        else if (puntos.Length == 1)
+                        {
+                            g.FillEllipse(new SolidBrush(color), puntos[0].X - 2, puntos[0].Y - 2, 4, 4);
+                        }
+                    }
+                }
+            }
+
+            pictureBox1.Refresh();
+        }
+
+        // ✅ MEJORADO: Dibuja la ventana de recorte con información adicional
+        private void DibujarVentanaRecorte()
+        {
+            if (pictureBox1.Image == null) return;
+
+            using (Graphics g = Graphics.FromImage(pictureBox1.Image))
+            {
+                // Dibujar ventana principal en rojo punteado
+                using (var pen = new Pen(Color.Red, 3))
+                {
+                    pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                    g.DrawRectangle(pen, ventanaRecorte.X, ventanaRecorte.Y, ventanaRecorte.Width, ventanaRecorte.Height);
+                }
+
+                // Dibujar área de fondo semitransparente para mejor visibilidad
+                using (var brush = new SolidBrush(Color.FromArgb(30, Color.Red)))
+                {
+                    g.FillRectangle(brush, ventanaRecorte);
+                }
+
+                // Agregar texto informativo
+                using (var font = new Font("Arial", 10, FontStyle.Bold))
+                using (var brush = new SolidBrush(Color.DarkRed))
+                {
+                    string texto = "VENTANA DE RECORTE";
+                    var tamaño = g.MeasureString(texto, font);
+                    float x = ventanaRecorte.X + (ventanaRecorte.Width - tamaño.Width) / 2;
+                    float y = ventanaRecorte.Y - tamaño.Height - 5;
+                    
+                    // Fondo blanco para el texto
+                    using (var fondoBrush = new SolidBrush(Color.White))
+                    {
+                        g.FillRectangle(fondoBrush, x - 5, y - 2, tamaño.Width + 10, tamaño.Height + 4);
+                    }
+                    
+                    g.DrawString(texto, font, brush, x, y);
+                }
+            }
+            
+            pictureBox1.Refresh();
+        }
+
+
+
+        //  Maneja algoritmo de scan line
         private void ManejarScanLine(Point puntoMouse)
         {
             if (scanLineAlgoritmo == null)
@@ -275,7 +580,7 @@ namespace Graphic_Algoritms
                 bool resultado = scanLineAlgoritmo.ProcesarClicScanLine(Color.LightBlue, 50);
                 if (resultado)
                 {
-                    ShowNotification("🎨 ScanLine aplicado correctamente - Animación en progreso");
+                    ShowNotification("🎨 ScanLine aplicado correctamente - Animación línea por línea");
                 }
                 else
                 {
@@ -480,10 +785,46 @@ namespace Graphic_Algoritms
             modoCreacionPoligono = false;
             poligonoListo = false;
 
+            // Resetear estado de algoritmos de recorte
+            formasParaRecortar.Clear();
+            puntoInicialLinea = null;
+            verticesPoligonoRecorte.Clear();
+            estadoRecorte = "";
+
             // Resetear estado de botones
             btn_Draw.Visible = false;
             btn_Paint.Visible = false;
             btn_Paint.Enabled = true;
+        }
+
+        // ✅ NUEVO: Método para limpiar canvas automáticamente al cambiar categorías
+        private void LimpiarCanvasAutomatico()
+        {
+            if (pictureBox1.Image != null)
+            {
+                pictureBox1.Image = null;
+                pictureBox1.Invalidate();
+            }
+
+            // Resetear estados específicos sin afectar la selección de algoritmo
+            primerPunto = null;
+            segundoPunto = null;
+            esperandoPunto = false;
+            floodFillAlgoritmo = null;
+            modoCreacionPoligono = false;
+            poligonoListo = false;
+            
+            // Resetear estado de recorte
+            formasParaRecortar.Clear();
+            puntoInicialLinea = null;
+            verticesPoligonoRecorte.Clear();
+            estadoRecorte = "";
+            
+            // Resetear curvas
+            administradorCurvas?.LimpiarCurvas();
+            
+            // ✅ NUEVO: Limpiar visualización UX
+            uxEnhancer?.LimpiarVisualizacion();
         }
 
         private void ActualizarOpcionesAlgoritmo(string categoria)
@@ -516,6 +857,8 @@ namespace Graphic_Algoritms
                         lblAlgoritmo.Text = $"🎯 Algoritmo: {algoritmoSeleccionado}";
                         ShowNotification($"Algoritmo {algoritmoSeleccionado} seleccionado");
                         ActualizarInstrucciones();
+                        
+                        // Resetear estados
                         primerPunto = null;
                         segundoPunto = null;
                         esperandoPunto = false;
@@ -523,6 +866,16 @@ namespace Graphic_Algoritms
                         modoCreacionPoligono = false;
                         poligonoListo = false;
                         
+                        // Inicializar curvas si es necesario
+                        if (algoritmoSeleccionado == "Bézier")
+                        {
+                            administradorCurvas.IniciarCreacionCurva("Bézier");
+                        }
+                        else if (algoritmoSeleccionado == "B-spline")
+                        {
+                            administradorCurvas.IniciarCreacionCurva("B-spline");
+                        }
+
                     }
                 };
 
@@ -576,6 +929,74 @@ namespace Graphic_Algoritms
                                    "3. Haga clic DENTRO para rellenar\r\n\r\n" +
                                    "💡 El botón aparecerá automáticamente";
                     break;
+                // Dentro del método ActualizarInstrucciones():
+
+                case "Cohen–Sutherland (líneas)":
+                    if (estadoRecorte == "")
+                        instrucciones = "✂️ Cohen-Sutherland - Recorte de Líneas\r\n\r\n" +
+                                       "📋 Algoritmo para recortar líneas contra ventana rectangular\r\n\r\n" +
+                                       "🎯 Funcionamiento:\r\n" +
+                                       "• Ventana de recorte automática en el centro\r\n" +
+                                       "• Clasifica extremos de líneas por región\r\n" +
+                                       "• Calcula intersecciones con bordes\r\n" +
+                                       "• Muestra solo segmentos visibles\r\n\r\n" +
+                                       "💡 Haga clic para iniciar y crear líneas";
+                    else if (estadoRecorte == "crear_lineas")
+                        instrucciones = "✂️ Creando Líneas - Cohen-Sutherland\r\n\r\n" +
+                                       "📋 Estado actual:\r\n" +
+                                       "� Ventana de recorte: Centrada automáticamente\r\n" +
+                                       "�📏 Haga clic en pares de puntos para crear líneas\r\n" +
+                                       $"📊 Líneas creadas: {formasParaRecortar.Count}\r\n\r\n" +
+                                       "✨ Use 'Aplicar Recorte' para ver el resultado\r\n" +
+                                       "💡 Solo las partes dentro de la ventana roja se conservan";
+                    break;
+
+                case "Sutherland–Hodgman (polígonos)":
+                    if (estadoRecorte == "")
+                        instrucciones = "✂️ Sutherland-Hodgman - Recorte de Polígonos\r\n\r\n" +
+                                       "📋 Algoritmo para recortar polígonos contra ventana rectangular\r\n\r\n" +
+                                       "🎯 Funcionamiento:\r\n" +
+                                       "• Ventana de recorte automática en el centro\r\n" +
+                                       "• Recorta secuencialmente contra cada borde\r\n" +
+                                       "• Conserva la forma del polígono resultante\r\n" +
+                                       "• Maneja intersecciones complejas\r\n\r\n" +
+                                       "💡 Haga clic para iniciar y crear polígonos";
+                    else if (estadoRecorte == "crear_poligonos")
+                        instrucciones = "✂️ Creando Polígonos - Sutherland-Hodgman\r\n\r\n" +
+                                       "📋 Estado actual:\r\n" +
+                                       "🔲 Ventana de recorte: Centrada automáticamente\r\n" +
+                                       "🔺 Haga clics para agregar vértices del polígono\r\n" +
+                                       $"📊 Vértices actuales: {verticesPoligonoRecorte.Count}\r\n" +
+                                       $"📊 Polígonos completados: {formasParaRecortar.Count}\r\n\r\n" +
+                                       "✨ Use 'Completar Forma' para finalizar polígono\r\n" +
+                                       "💡 Mínimo 3 vértices por polígono";
+                    break;
+
+                case "Bézier":
+                    instrucciones = "📈 Curva de Bézier Cúbica\r\n\r\n" +
+                                   "📋 Curva suave definida por 4 puntos de control\r\n\r\n" +
+                                   "🎯 Características:\r\n" +
+                                   "• P₀: Punto de inicio de la curva\r\n" +
+                                   "• P₁: Primer punto de control (tangente inicial)\r\n" +
+                                   "• P₂: Segundo punto de control (tangente final)\r\n" +
+                                   "• P₃: Punto final de la curva\r\n\r\n" +
+                                   $"📊 Puntos agregados: {(administradorCurvas?.ObtenerInformacionEstado().Split('-').LastOrDefault()?.Trim() ?? "0")}\r\n" +
+                                   "💡 Se completa automáticamente con 4 puntos";
+                    break;
+
+                case "B-spline":
+                    instrucciones = "📈 Curva B-Spline Cúbica\r\n\r\n" +
+                                   "📋 Curva suave que pasa cerca de los puntos de control\r\n\r\n" +
+                                   "🎯 Características:\r\n" +
+                                   "• Continuidad suave entre segmentos\r\n" +
+                                   "• Control local (modificar un punto afecta localmente)\r\n" +
+                                   "• Interpolación aproximada de puntos\r\n" +
+                                   "• Acepta cualquier número de puntos (≥4)\r\n\r\n" +
+                                   $"📊 {administradorCurvas?.ObtenerInformacionEstado() ?? "Puntos: 0"}\r\n" +
+                                   "💡 Use 'Completar Curva' para finalizar (mínimo 4 puntos)";
+                    break;
+
+
 
 
                 default:
@@ -602,7 +1023,15 @@ namespace Graphic_Algoritms
 
         private void btn_Raster_Click(object sender, EventArgs e)
         {
+            LimpiarCanvasAutomatico(); // ✅ NUEVO: Limpiar al cambiar categoría
+            
+            // ✅ NUEVO: Configurar UX para rasterización
+            uxEnhancer.ConfigurarCategoria("Rasterizado");
+            
             textBox1.Text = "🎯 Rasterización de Primitivas\r\n\r\n" +
+                           "📊 Plano cartesiano visible para precisión\r\n" +
+                           "🔍 Los puntos de click se muestran temporalmente\r\n" +
+                           "📏 Coordenadas y cuadrícula de referencia\r\n\r\n" +
                            "Algoritmos disponibles para dibujar líneas, círculos y elipses.\r\n" +
                            "Seleccione un algoritmo específico y dibuje en el área blanca.";
             ActualizarOpcionesAlgoritmo("Rasterizado");
@@ -610,7 +1039,15 @@ namespace Graphic_Algoritms
 
         private void btn_FillAlg_Click(object sender, EventArgs e)
         {
+            LimpiarCanvasAutomatico(); // ✅ NUEVO: Limpiar al cambiar categoría
+            
+            // ✅ NUEVO: Configurar UX para relleno
+            uxEnhancer.ConfigurarCategoria("Relleno");
+            
             textBox1.Text = "🎨 Algoritmos de Relleno\r\n\r\n" +
+                           "🔍 Los puntos de click se muestran temporalmente\r\n" +
+                           "📍 Visualización clara de vértices del polígono\r\n" +
+                           "🎯 Área limpia para crear figuras\r\n\r\n" +
                            "Técnicas para rellenar regiones cerradas con colores o patrones.\r\n" +
                            "Seleccione un algoritmo y haga clic en una región para rellenar.";
             ActualizarOpcionesAlgoritmo("Relleno");
@@ -618,34 +1055,110 @@ namespace Graphic_Algoritms
             btn_Draw.Visible = true;
             btn_Draw.Enabled = true;
             btn_Draw.Text = "Completar Polígono";
-
-            //btn_Paint.Visible = true;
-            //btn_Paint.Enabled = false;
-            btn_Draw.BackColor = Color.Red;
-            //btn_Paint.BackColor = Color.Orange;
-
         }
 
         private void btn_CutAlg_Click(object sender, EventArgs e)
         {
+            LimpiarCanvasAutomatico(); // ✅ NUEVO: Limpiar al cambiar categoría
+            
+            // ✅ NUEVO: Configurar UX para recorte
+            uxEnhancer.ConfigurarCategoria("Recorte");
+            
             textBox1.Text = "✂️ Algoritmos de Recorte\r\n\r\n" +
-                           "Técnicas para recortar primitivas gráficas contra ventanas.\r\n" +
-                           "Útil para optimizar el renderizado y eliminar partes no visibles.";
+                           "🟢 Área de recorte visible automáticamente\r\n" +
+                           "🔢 Códigos Cohen-Sutherland mostrados\r\n" +
+                           "🎯 Ventana centrada al 40% del canvas\r\n" +
+                           "📍 Puntos de click visibles temporalmente\r\n\r\n" +
+                           "Técnicas avanzadas para recortar primitivas gráficas contra ventanas.\r\n" +
+                           "Ventana de recorte automática centrada. Útil para optimización y culling.";
             ActualizarOpcionesAlgoritmo("Recorte");
+
+            // ✅ MEJORADO: Configuración simplificada para recorte
+            groupBox3.Visible = true;
+            btn_Draw.Visible = true;
+            btn_Draw.Enabled = true;
+            btn_Draw.Text = "Iniciar Algoritmo";
+            btn_Paint.Visible = true;
+            btn_Paint.Enabled = false;
+            btn_Paint.Text = "Aplicar Recorte";
         }
 
         private void btn_CurvAlg_Click(object sender, EventArgs e)
         {
+            LimpiarCanvasAutomatico(); // ✅ NUEVO: Limpiar al cambiar categoría
+            administradorCurvas.LimpiarCurvas(); // ✅ LIMPIAR CURVAS
+            
+            // ✅ NUEVO: Configurar UX para curvas
+            uxEnhancer.ConfigurarCategoria("Curvas");
+            
             textBox1.Text = "📈 Curvas Paramétricas\r\n\r\n" +
-                           "Algoritmos para generar curvas suaves y complejas.\r\n" +
-                           "Ideales para diseño gráfico y modelado matemático.";
+                           "📊 Plano cartesiano visible para precisión\r\n" +
+                           "🔍 Los puntos de click se muestran temporalmente\r\n" +
+                           "📏 Coordenadas y cuadrícula de referencia\r\n" +
+                           "🎯 Puntos de control visibles\r\n\r\n" +
+                           "Algoritmos avanzados para generar curvas suaves y complejas.\r\n" +
+                           "Bézier: 4 puntos exactos. B-Spline: mínimo 4 puntos, máximo ilimitado.";
             ActualizarOpcionesAlgoritmo("Curvas");
+            
+            // ✅ CONFIGURAR BOTONES PARA CURVAS
+            groupBox3.Visible = true;
+            btn_Draw.Visible = true;
+            btn_Draw.Enabled = true;
+            btn_Draw.Text = "Completar Curva";
+            btn_Paint.Visible = true;
+            btn_Paint.Enabled = true;
+            btn_Paint.Text = "Alternar Puntos";
         }
 
         private void btn_reset_Click(object sender, EventArgs e)
         {
             ResetCanvas();
         }
+
+
+        private void btn_Paint_Click(object sender, EventArgs e)
+        {
+            if (algoritmoSeleccionado == "Flood Fill")
+            {
+                if (poligonoListo && floodFillAlgoritmo != null && floodFillAlgoritmo.TienePoligonoCompleto)
+                {
+                    ShowNotification("Modo pintado activado. Haga clic dentro del polígono para rellenar.");
+                }
+            }
+            else if (algoritmoSeleccionado == "Scanline")
+            {
+                if (poligonoListo && scanLineAlgoritmo != null && scanLineAlgoritmo.TienePoligonoCompleto)
+                {
+                    bool resultado = scanLineAlgoritmo.ProcesarClicScanLine(Color.LightBlue, 50);
+                    if (resultado)
+                    {
+                        ShowNotification("🎨 ScanLine aplicado correctamente - Animación línea por línea");
+                    }
+                }
+            }
+            else if (algoritmoSeleccionado == "Cohen–Sutherland (líneas)") // ✅ NUEVO
+            {
+                EjecutarRecorteCohenSutherland();
+            }
+            else if (algoritmoSeleccionado == "Sutherland–Hodgman (polígonos)") // ✅ NUEVO
+            {
+                EjecutarRecorteSutherlandHodgman();
+            }
+            else if (algoritmoSeleccionado == "Bézier" || algoritmoSeleccionado == "B-spline")
+            {
+                // Alternar visualización de puntos de control
+                administradorCurvas.AlternarPuntosControl();
+                ShowNotification("Visualización de puntos de control alternada.");
+            }
+            else
+            {
+                ShowNotification("Complete la figura primero usando el botón correspondiente", false);
+            }
+        }
+
+
+
+
 
         private void btn_Draw_Click(object sender, EventArgs e)
         {
@@ -663,7 +1176,7 @@ namespace Graphic_Algoritms
                     ShowNotification("Polígono completado. Ahora use el botón 'Pintar' para rellenar.");
                 }
             }
-            else if (algoritmoSeleccionado == "Scanline") // ✅ NUEVO
+            else if (algoritmoSeleccionado == "Scanline")
             {
                 if (scanLineAlgoritmo != null && modoCreacionPoligono)
                 {
@@ -677,61 +1190,223 @@ namespace Graphic_Algoritms
                     ShowNotification("Polígono completado. Ahora use el botón 'Pintar' para rellenar.");
                 }
             }
-        
-
-            if (algoritmoSeleccionado == "Flood Fill")
+            else if (algoritmoSeleccionado == "Cohen–Sutherland (líneas)")
             {
-                if (floodFillAlgoritmo != null && modoCreacionPoligono)
+                if (estadoRecorte == "")
                 {
-                    floodFillAlgoritmo.CompletarPoligono();
-                    modoCreacionPoligono = false;
-                    poligonoListo = true;
-
-                    btn_Draw.Visible = false;
-                    btn_Paint.Visible = true;
-
-                    ShowNotification("Polígono completado. Ahora use el botón 'Pintar' para rellenar.");
-
-                    textBox1.Text = "🎨 Polígono Completado\r\n\r\n" +
-                                   "📋 Instrucciones:\r\n" +
-                                   "1. El polígono ha sido cerrado ✅\r\n" +
-                                   "2. Presione el botón 'Pintar' para rellenar\r\n" +
-                                   "3. Haga clic dentro del polígono\r\n\r\n" +
-                                   "💡 Use 'Resetear' para comenzar de nuevo";
+                    // Iniciar proceso directamente
+                    estadoRecorte = "crear_lineas";
+                    CalcularVentanaRecorteAutomatica();
+                    DibujarVentanaRecorte();
+                    btn_Draw.Text = "Listo para Recortar";
+                    ShowNotification("Ventana automática creada. Ahora cree líneas haciendo clic en pares de puntos.");
+                    ActualizarInstrucciones();
+                }
+                else if (estadoRecorte == "crear_lineas")
+                {
+                    // Habilitar recorte
+                    btn_Paint.Enabled = true;
+                    ShowNotification("Líneas creadas. Use 'Aplicar Recorte' para ver el resultado del algoritmo Cohen-Sutherland.");
                 }
             }
-            else if (algoritmoSeleccionado.Contains("Recorte"))
+            else if (algoritmoSeleccionado == "Sutherland–Hodgman (polígonos)")
             {
-                // Aquí debes llamar tu lógica de recorte (ejemplo)
-                ShowNotification("✂️ Iniciando recorte...");
-                // TODO: Aquí invoca tu método de recorte según tipo
+                if (estadoRecorte == "")
+                {
+                    // Iniciar proceso directamente
+                    estadoRecorte = "crear_poligonos";
+                    CalcularVentanaRecorteAutomatica();
+                    DibujarVentanaRecorte();
+                    btn_Draw.Text = "Completar Forma";
+                    btn_Paint.Text = "Aplicar Recorte";
+                    ShowNotification("Ventana automática creada. Cree polígonos haciendo clic en vértices.");
+                    ActualizarInstrucciones();
+                }
+                else if (estadoRecorte == "crear_poligonos")
+                {
+                    // Completar polígono actual
+                    CompletarPoligonoRecorte();
+                    ActualizarInstrucciones();
+                }
+            }
+            else if (algoritmoSeleccionado == "Bézier")
+            {
+                // Las curvas de Bézier se completan automáticamente
+                ShowNotification("Las curvas de Bézier se completan automáticamente con 4 puntos de control.");
+            }
+            else if (algoritmoSeleccionado == "B-spline")
+            {
+                // Completar curva B-Spline
+                administradorCurvas.CompletarCurva();
+                ShowNotification("Curva B-Spline completada. Puede crear una nueva curva.");
+                ActualizarInstrucciones();
             }
         }
 
-
-        private void btn_Paint_Click(object sender, EventArgs e)
+        // ✅ MEJORADO: Ejecuta el recorte Cohen-Sutherland con mejor visualización
+        private void EjecutarRecorteCohenSutherland()
         {
-            if (algoritmoSeleccionado == "Flood Fill")
+            if (formasParaRecortar.Count == 0)
             {
-                if (poligonoListo && floodFillAlgoritmo != null && floodFillAlgoritmo.TienePoligonoCompleto)
-                {
-                    ShowNotification("Modo pintado activado. Haga clic dentro del polígono para rellenar.");
-                }
+                ShowNotification("No hay líneas para recortar. Cree líneas primero.", false);
+                return;
             }
-            else if (algoritmoSeleccionado == "Scanline") // ✅ NUEVO
+
+            LimpiarCanvas();
+            DibujarVentanaRecorte();
+
+            int lineasRecortadas = 0;
+            int lineasOriginales = 0;
+            
+            foreach (var forma in formasParaRecortar)
             {
-                if (poligonoListo && scanLineAlgoritmo != null && scanLineAlgoritmo.TienePoligonoCompleto)
+                if (forma is Cut_Algorithms.Line linea)
                 {
-                    bool resultado = scanLineAlgoritmo.ProcesarClicScanLine(Color.LightBlue, 50);
-                    if (resultado)
+                    lineasOriginales++;
+                    
+                    try
                     {
-                        ShowNotification("🎨 ScanLine aplicado correctamente - Animación línea por línea");
+                        // Verificar si necesita recorte
+                        bool necesitaRecorte = cohenSutherlandClipper.NeedsClipping(linea, ventanaRecorte);
+                        
+                        if (necesitaRecorte)
+                        {
+                            // Dibujar línea original en rojo (será recortada)
+                            DibujarForma(linea, Color.FromArgb(100, Color.Red));
+                            
+                            var lineaRecortada = cohenSutherlandClipper.ClipShape(linea, ventanaRecorte);
+                            if (lineaRecortada != null)
+                            {
+                                // Dibujar parte recortada en verde brillante
+                                DibujarForma(lineaRecortada, Color.LimeGreen);
+                                lineasRecortadas++;
+                            }
+                        }
+                        else
+                        {
+                            // Línea completamente visible - dibujar en azul
+                            DibujarForma(linea, Color.Blue);
+                            lineasRecortadas++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowNotification($"Error al recortar: {ex.Message}", false);
+                        return;
                     }
                 }
             }
-            else
+
+            estadoRecorte = "";
+            ShowNotification($"✂️ Cohen-Sutherland: {lineasRecortadas}/{lineasOriginales} líneas visibles (Verde=Recortadas, Azul=Completas, Rojo=Eliminadas)");
+        }
+
+        // ✅ MEJORADO: Ejecuta el recorte Sutherland-Hodgman con mejor visualización
+        private void EjecutarRecorteSutherlandHodgman()
+        {
+            if (formasParaRecortar.Count == 0)
             {
-                ShowNotification("Complete el polígono primero usando el botón 'Completar Polígono'", false);
+                ShowNotification("No hay polígonos para recortar. Cree polígonos primero.", false);
+                return;
+            }
+
+            LimpiarCanvas();
+            DibujarVentanaRecorte();
+
+            int poligonosRecortados = 0;
+            int poligonosOriginales = 0;
+            
+            foreach (var forma in formasParaRecortar)
+            {
+                if (forma is Cut_Algorithms.Polygon poligono)
+                {
+                    poligonosOriginales++;
+                    
+                    try
+                    {
+                        // Verificar si necesita recorte
+                        bool necesitaRecorte = sutherlandHodgmanClipper.NeedsClipping(poligono, ventanaRecorte);
+                        
+                        if (necesitaRecorte)
+                        {
+                            // Dibujar polígono original en rojo (será recortado)
+                            DibujarForma(poligono, Color.FromArgb(100, Color.Red));
+                            
+                            var poligonoRecortado = sutherlandHodgmanClipper.ClipShape(poligono, ventanaRecorte);
+                            if (poligonoRecortado != null)
+                            {
+                                // Dibujar parte recortada en verde brillante
+                                DibujarForma(poligonoRecortado, Color.LimeGreen);
+                                poligonosRecortados++;
+                            }
+                        }
+                        else
+                        {
+                            // Polígono completamente visible - dibujar en azul
+                            DibujarForma(poligono, Color.Blue);
+                            poligonosRecortados++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowNotification($"Error al recortar: {ex.Message}", false);
+                        return;
+                    }
+                }
+            }
+
+            estadoRecorte = "";
+            ShowNotification($"✂️ Sutherland-Hodgman: {poligonosRecortados}/{poligonosOriginales} polígonos visibles (Verde=Recortados, Azul=Completos, Rojo=Eliminados)");
+        }
+
+        // ✅ NUEVO: Dibuja una línea temporal
+        private void DibujarLineaTemporal(Point p1, Point p2, Color color)
+        {
+            if (pictureBox1.Image == null)
+            {
+                pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+                using (Graphics g = Graphics.FromImage(pictureBox1.Image))
+                {
+                    g.Clear(Color.White);
+                }
+            }
+
+            using (Graphics g = Graphics.FromImage(pictureBox1.Image))
+            {
+                using (Pen pen = new Pen(color, 1))
+                {
+                    pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+                    g.DrawLine(pen, p1, p2);
+                }
+            }
+            pictureBox1.Refresh();
+        }
+
+        // ✅ NUEVO: Maneja la creación de curvas de Bézier
+        private void ManejarCurvaBezier(Point puntoMouse)
+        {
+            if (administradorCurvas != null)
+            {
+                bool puedeAgregar = administradorCurvas.AgregarPuntoControl(puntoMouse);
+                int puntosRestantes = administradorCurvas.ObtenerPuntosRestantes();
+                
+                if (puntosRestantes > 0)
+                {
+                    ShowNotification($"Punto de control agregado. Faltan {puntosRestantes} puntos para completar la curva de Bézier.");
+                }
+                
+                ActualizarInstrucciones();
+            }
+        }
+
+        // ✅ NUEVO: Maneja la creación de curvas B-Spline
+        private void ManejarCurvaBSpline(Point puntoMouse)
+        {
+            if (administradorCurvas != null)
+            {
+                administradorCurvas.AgregarPuntoControl(puntoMouse);
+                ShowNotification($"Punto de control agregado. Use 'Completar Curva' para finalizar la B-Spline (mínimo 4 puntos).");
+                ActualizarInstrucciones();
             }
         }
 

@@ -46,6 +46,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Algorithms\Curv\AdministradorCurvas.cs" />
+    <Compile Include="Algorithms\Curv\CurvaBase.cs" />
+    <Compile Include="Algorithms\Curv\CurvaBezier.cs" />
+    <Compile Include="Algorithms\Curv\CurvaBSpline.cs" />
+    <Compile Include="Algorithms\Curv\ICurva.cs" />
     <Compile Include="Algorithms\Fill\PolygonDrawer.cs" />
     <Compile Include="Algorithms\Fill\ScanLine.cs" />
     <Compile Include="Algorithms\Rander\Algoritmo.cs" />

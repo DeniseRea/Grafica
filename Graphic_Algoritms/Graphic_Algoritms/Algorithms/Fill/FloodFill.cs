@@ -26,7 +26,7 @@ namespace AlgoritmosGraficar
         private Color colorAnimacion;
         private Color colorOriginal;
 
-        private PolygonDrawer polygonDrawer;
+        public PolygonDrawer polygonDrawer;
 
         public FloodFill(PictureBox pictureBox)
         {
