@@ -37,12 +37,11 @@
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.rdBtn_Animation = new System.Windows.Forms.RadioButton();
             this.btn_reset = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.btn_Paint = new System.Windows.Forms.Button();
             this.btn_Draw = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.btn_Paint = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox5.SuspendLayout();
@@ -139,7 +138,6 @@
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.rdBtn_Animation);
             this.groupBox4.Controls.Add(this.btn_reset);
             this.groupBox4.Location = new System.Drawing.Point(28, 509);
             this.groupBox4.Name = "groupBox4";
@@ -148,20 +146,9 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Opciones";
             // 
-            // rdBtn_Animation
-            // 
-            this.rdBtn_Animation.AutoSize = true;
-            this.rdBtn_Animation.Location = new System.Drawing.Point(25, 41);
-            this.rdBtn_Animation.Name = "rdBtn_Animation";
-            this.rdBtn_Animation.Size = new System.Drawing.Size(110, 27);
-            this.rdBtn_Animation.TabIndex = 4;
-            this.rdBtn_Animation.TabStop = true;
-            this.rdBtn_Animation.Text = "animación";
-            this.rdBtn_Animation.UseVisualStyleBackColor = true;
-            // 
             // btn_reset
             // 
-            this.btn_reset.Location = new System.Drawing.Point(25, 95);
+            this.btn_reset.Location = new System.Drawing.Point(18, 68);
             this.btn_reset.Name = "btn_reset";
             this.btn_reset.Size = new System.Drawing.Size(153, 44);
             this.btn_reset.TabIndex = 0;
@@ -179,6 +166,16 @@
             this.groupBox3.TabIndex = 1;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Escoge";
+            // 
+            // btn_Paint
+            // 
+            this.btn_Paint.Location = new System.Drawing.Point(34, 222);
+            this.btn_Paint.Name = "btn_Paint";
+            this.btn_Paint.Size = new System.Drawing.Size(120, 39);
+            this.btn_Paint.TabIndex = 5;
+            this.btn_Paint.Text = "Pintar";
+            this.btn_Paint.UseVisualStyleBackColor = true;
+            this.btn_Paint.Click += new System.EventHandler(this.btn_Paint_Click);
             // 
             // btn_Draw
             // 
@@ -198,16 +195,6 @@
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             // 
-            // btn_Paint
-            // 
-            this.btn_Paint.Location = new System.Drawing.Point(34, 222);
-            this.btn_Paint.Name = "btn_Paint";
-            this.btn_Paint.Size = new System.Drawing.Size(120, 39);
-            this.btn_Paint.TabIndex = 5;
-            this.btn_Paint.Text = "Pintar";
-            this.btn_Paint.UseVisualStyleBackColor = true;
-            this.btn_Paint.Click += new System.EventHandler(this.btn_Paint_Click);
-            // 
             // FrmHome
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -222,7 +209,6 @@
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
             this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
@@ -243,7 +229,6 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Button btn_reset;
-        private System.Windows.Forms.RadioButton rdBtn_Animation;
         private System.Windows.Forms.Button btn_CompletarPoligono;
         private System.Windows.Forms.Button btn_Draw;
         private System.Windows.Forms.Button btn_Paint;
